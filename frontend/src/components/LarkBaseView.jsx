@@ -22,6 +22,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { getTaskReviewAlert } from '../utils/reviewAlertHelper.js';
+import { api } from '../api/client.js';
 
 const STATUS_OPTIONS = [
   { value: 'pending_review', label: 'Chờ đánh giá', badge: 'bg-amber-50 text-amber-800 border-amber-200' },
@@ -57,6 +58,7 @@ export default function LarkBaseView({
   onUpdateTask,
   onCreateTask,
   onDeleteTask,
+  onSyncTask,
   onInspectEmployee,
 }) {
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'kanban'
@@ -67,6 +69,59 @@ export default function LarkBaseView({
   const [showNewModal, setShowNewModal] = useState(false);
   const [detailTaskId, setDetailTaskId] = useState(null);
   const [modalError, setModalError] = useState('');
+
+  const handleViewModeChange = (nextView) => {
+    setViewMode(nextView);
+    api
+      .getTasks({
+        weekId: selectedWeekId,
+        projectId: selectedProjectId,
+        filter: quickFilter,
+        view: nextView,
+        groupBy,
+      })
+      .catch(() => {});
+  };
+
+  const handleGroupByChange = (nextGroup) => {
+    setGroupBy(nextGroup);
+    api
+      .getTasks({
+        weekId: selectedWeekId,
+        projectId: selectedProjectId,
+        filter: quickFilter,
+        view: viewMode,
+        groupBy: nextGroup,
+      })
+      .catch(() => {});
+  };
+
+  const handleQuickFilterChange = (nextFilter) => {
+    setQuickFilter(nextFilter);
+    api
+      .getTasks({
+        weekId: selectedWeekId,
+        projectId: selectedProjectId,
+        filter: nextFilter,
+        view: viewMode,
+      })
+      .catch(() => {});
+  };
+
+  const handleOpenNewModal = () => {
+    setShowNewModal(true);
+    api.getProjects({ action: 'open_create_task_modal' }).catch(() => {});
+  };
+
+  const handleOpenDetailTask = (tid) => {
+    setDetailTaskId(tid);
+    api
+      .getTaskDetail(tid, { action: 'open_task_detail' })
+      .then((res) => {
+        if (res?.task) onSyncTask?.(res.task);
+      })
+      .catch(() => {});
+  };
   const detailTask = useMemo(
     () => tasks.find((t) => t.id === detailTaskId) || null,
     [tasks, detailTaskId]
@@ -206,7 +261,7 @@ export default function LarkBaseView({
           <div className="flex flex-wrap items-center gap-2">
             <div className="inline-flex rounded-lg border border-slate-200 bg-slate-100 p-0.5">
               <button
-                onClick={() => setViewMode('grid')}
+                onClick={() => handleViewModeChange('grid')}
                 className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md transition ${
                   viewMode === 'grid' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'
                 }`}
@@ -214,7 +269,7 @@ export default function LarkBaseView({
                 <Table2 className="w-3.5 h-3.5" /> Bảng Lark Base
               </button>
               <button
-                onClick={() => setViewMode('kanban')}
+                onClick={() => handleViewModeChange('kanban')}
                 className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md transition ${
                   viewMode === 'kanban' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'
                 }`}
@@ -229,7 +284,7 @@ export default function LarkBaseView({
                 <span className="text-slate-500">Nhóm (Group by):</span>
                 <select
                   value={groupBy}
-                  onChange={(e) => setGroupBy(e.target.value)}
+                  onChange={(e) => handleGroupByChange(e.target.value)}
                   className="font-semibold text-slate-800 bg-transparent focus:outline-none cursor-pointer"
                 >
                   <option value="project">Theo Dự án</option>
@@ -256,7 +311,7 @@ export default function LarkBaseView({
             </div>
 
             <button
-              onClick={() => setShowNewModal(true)}
+              onClick={handleOpenNewModal}
               className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#3370FF] hover:bg-[#245BDB] text-white shadow-sm transition"
             >
               <Plus className="w-3.5 h-3.5" /> Thêm dòng Task
@@ -271,7 +326,7 @@ export default function LarkBaseView({
               <Filter className="w-3 h-3" /> Lọc nhanh:
             </span>
             <button
-              onClick={() => setQuickFilter('all')}
+              onClick={() => handleQuickFilterChange('all')}
               className={`text-xs px-2.5 py-1 rounded-full border transition ${
                 quickFilter === 'all'
                   ? 'bg-blue-600 text-white border-blue-600'
@@ -281,7 +336,7 @@ export default function LarkBaseView({
               Tất cả ({counts.all})
             </button>
             <button
-              onClick={() => setQuickFilter('low_quality')}
+              onClick={() => handleQuickFilterChange('low_quality')}
               className={`text-xs px-2.5 py-1 rounded-full border transition ${
                 quickFilter === 'low_quality'
                   ? 'bg-rose-600 text-white border-rose-600'
@@ -291,7 +346,7 @@ export default function LarkBaseView({
               🔴 Chưa đạt chất lượng / Rework ({counts.lowQuality})
             </button>
             <button
-              onClick={() => setQuickFilter('late')}
+              onClick={() => handleQuickFilterChange('late')}
               className={`text-xs px-2.5 py-1 rounded-full border transition ${
                 quickFilter === 'late'
                   ? 'bg-amber-600 text-white border-amber-600'
@@ -301,7 +356,7 @@ export default function LarkBaseView({
               ⏰ Chậm Deadline ({counts.late})
             </button>
             <button
-              onClick={() => setQuickFilter('gap')}
+              onClick={() => handleQuickFilterChange('gap')}
               className={`text-xs px-2.5 py-1 rounded-full border transition ${
                 quickFilter === 'gap'
                   ? 'bg-purple-600 text-white border-purple-600'
@@ -311,7 +366,7 @@ export default function LarkBaseView({
               ⚠️ Lệch Tự chấm vs PM ({counts.gap})
             </button>
             <button
-              onClick={() => setQuickFilter('pending_pm')}
+              onClick={() => handleQuickFilterChange('pending_pm')}
               className={`text-xs px-2.5 py-1 rounded-full border transition ${
                 quickFilter === 'pending_pm'
                   ? 'bg-slate-800 text-white border-slate-800'
@@ -434,7 +489,7 @@ export default function LarkBaseView({
                                     )}
                                     <button
                                       type="button"
-                                      onClick={() => setDetailTaskId(task.id)}
+                                      onClick={() => handleOpenDetailTask(task.id)}
                                       className="text-left font-semibold text-slate-900 hover:text-blue-600 leading-snug inline-flex items-start gap-1.5 transition"
                                       title="Bấm để xem chi tiết task"
                                     >
@@ -746,7 +801,7 @@ export default function LarkBaseView({
 
                       <button
                         type="button"
-                        onClick={() => setDetailTaskId(task.id)}
+                        onClick={() => handleOpenDetailTask(task.id)}
                         className="text-left text-xs font-semibold text-slate-900 hover:text-blue-600 leading-snug transition"
                       >
                         {task.title}

@@ -21,6 +21,10 @@ import {
   downloadCompanyUsersTemplate,
   parseCompanyUsersExcel,
 } from '../utils/excelHelper.js';
+import {
+  generateAccountDefaults,
+  normalizeCompanyCodeSlug,
+} from '../utils/accountGenerator.js';
 
 const COMPANY_ROLE_OPTIONS = [
   { value: 'MEMBER', label: 'Nhân viên (MEMBER)' },
@@ -32,11 +36,17 @@ export default function CompanyAdminView({ currentUser }) {
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({
     name: '',
+    username: '',
     email: '',
     password: '123456',
     role: 'MEMBER',
     title: '',
     department: 'Khối Kỹ thuật Phần mềm',
+  });
+  const [manualFields, setManualFields] = useState({
+    username: false,
+    email: false,
+    password: false,
   });
   const [resetPassMap, setResetPassMap] = useState({});
   const [notice, setNotice] = useState('');
@@ -78,6 +88,55 @@ export default function CompanyAdminView({ currentUser }) {
     loadAccounts();
   }, [loadAccounts]);
 
+  useEffect(() => {
+    const code = data?.currentCompany?.code;
+    if (!code) return;
+    const slug = normalizeCompanyCodeSlug(code);
+    if (!slug) return;
+    setForm((prev) => {
+      const next = { ...prev };
+      if (!manualFields.password && (!prev.password || prev.password === '123456')) {
+        next.password = `123456${slug}`;
+      }
+      return next;
+    });
+  }, [data?.currentCompany?.code, manualFields.password]);
+
+  const handleCreateNameChange = (nextName) => {
+    const code = data?.currentCompany?.code || '';
+    const defaults = generateAccountDefaults(nextName, code);
+    setForm((prev) => {
+      const nextUsername = manualFields.username ? prev.username : defaults.username;
+      const nextEmail = manualFields.email
+        ? prev.email
+        : nextUsername && defaults.codeSlug
+        ? `${nextUsername}@${defaults.codeSlug}.com`
+        : '';
+      const nextPassword = manualFields.password ? prev.password : defaults.password;
+      return {
+        ...prev,
+        name: nextName,
+        username: nextUsername,
+        email: nextEmail,
+        password: nextPassword,
+      };
+    });
+  };
+
+  const handleCreateUsernameChange = (nextUsername) => {
+    const slug = normalizeCompanyCodeSlug(data?.currentCompany?.code || '');
+    setManualFields((prev) => ({ ...prev, username: nextUsername.trim() !== '' }));
+    setForm((prev) => ({
+      ...prev,
+      username: nextUsername,
+      email: manualFields.email
+        ? prev.email
+        : nextUsername.trim() && slug
+        ? `${nextUsername.trim()}@${slug}.com`
+        : '',
+    }));
+  };
+
   const showToast = (msg) => {
     setNotice(msg);
     setTimeout(() => setNotice(''), 4500);
@@ -88,19 +147,22 @@ export default function CompanyAdminView({ currentUser }) {
     try {
       setErrorMsg('');
       const res = await api.createUser(form);
+      const slug = normalizeCompanyCodeSlug(data?.currentCompany?.code || '');
       setForm({
         name: '',
+        username: '',
         email: '',
-        password: '123456',
+        password: slug ? `123456${slug}` : '123456',
         role: 'MEMBER',
         title: '',
         department: 'Khối Kỹ thuật Phần mềm',
       });
+      setManualFields({ username: false, email: false, password: false });
       await loadAccounts();
       showToast(
-        `Đã tạo tài khoản "${res.user.email}" (${
+        `Đã tạo tài khoản "${res.user.username || res.user.email}" (${res.user.email}) — ${
           res.user.role === 'DIRECTOR' ? 'Lãnh đạo' : 'Nhân viên'
-        }) — Tự động gắn thuộc công ty ${data?.currentCompany?.name}!`
+        } thuộc công ty ${data?.currentCompany?.name}!`
       );
     } catch (err) {
       setErrorMsg(err.message);
@@ -156,6 +218,7 @@ export default function CompanyAdminView({ currentUser }) {
       status: u.status || 'active',
       password: '',
     });
+    api.getCompanyAdminUsers({ action: 'open_edit_user', userId: u.id }).catch(() => {});
   };
 
   const handleSaveUser = async (e) => {
@@ -209,12 +272,13 @@ export default function CompanyAdminView({ currentUser }) {
     if (!file) return;
     try {
       setErrorMsg('');
-      const rows = await parseCompanyUsersExcel(file);
+      const rows = await parseCompanyUsersExcel(file, data?.currentCompany?.code || '');
       setExcelModal({
         title: `Nhập danh sách Tài khoản từ Excel — ${data?.currentCompany?.name || ''}`,
         subtitle: `Tệp: ${file.name} • Tự động gán thuộc công ty ${data?.currentCompany?.code || ''}`,
         columns: [
           { key: 'name', label: 'Họ và tên' },
+          { key: 'username', label: 'Tên tài khoản' },
           { key: 'email', label: 'Email đăng nhập' },
           { key: 'password', label: 'Mật khẩu' },
           { key: 'role', label: 'Vai trò' },
@@ -329,26 +393,31 @@ export default function CompanyAdminView({ currentUser }) {
 
           <div className="grid grid-cols-2 gap-2.5 text-xs">
             <div className="col-span-2">
-              <label className="block font-medium text-slate-600 mb-1">Họ và tên *</label>
+              <label className="block font-medium text-slate-600 mb-1">
+                Họ và tên *{' '}
+                <span className="text-[10px] font-normal text-blue-600">
+                  (Nhập họ tên → tự điền tài khoản, email, mật khẩu)
+                </span>
+              </label>
               <input
                 type="text"
                 required
                 value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="VD: Phạm Minh Tuấn"
+                onChange={(e) => handleCreateNameChange(e.target.value)}
+                placeholder="VD: Phan Đình Thắng"
                 className="w-full px-3 py-2 rounded-lg border border-slate-300"
               />
             </div>
 
             <div>
-              <label className="block font-medium text-slate-600 mb-1">Email đăng nhập *</label>
+              <label className="block font-medium text-slate-600 mb-1">Tên tài khoản *</label>
               <input
-                type="email"
+                type="text"
                 required
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                placeholder={`tuan.pham@${currentCompany?.domain || 'company.vn'}`}
-                className="w-full px-3 py-2 rounded-lg border border-slate-300"
+                value={form.username}
+                onChange={(e) => handleCreateUsernameChange(e.target.value)}
+                placeholder="VD: thangPD"
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono bg-blue-50/30"
               />
             </div>
 
@@ -358,8 +427,27 @@ export default function CompanyAdminView({ currentUser }) {
                 type="text"
                 required
                 value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono"
+                onChange={(e) => {
+                  setManualFields((prev) => ({ ...prev, password: true }));
+                  setForm({ ...form, password: e.target.value });
+                }}
+                placeholder={`123456${normalizeCompanyCodeSlug(currentCompany?.code || 'ptech') || 'ptech'}`}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono bg-blue-50/30"
+              />
+            </div>
+
+            <div className="col-span-2">
+              <label className="block font-medium text-slate-600 mb-1">Email đăng nhập *</label>
+              <input
+                type="email"
+                required
+                value={form.email}
+                onChange={(e) => {
+                  setManualFields((prev) => ({ ...prev, email: e.target.value.trim() !== '' }));
+                  setForm({ ...form, email: e.target.value });
+                }}
+                placeholder={`thangPD@${normalizeCompanyCodeSlug(currentCompany?.code || 'ptech') || 'ptech'}.com`}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono bg-blue-50/30"
               />
             </div>
 

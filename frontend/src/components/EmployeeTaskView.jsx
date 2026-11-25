@@ -71,6 +71,7 @@ export default function EmployeeTaskView({
   onCreateTask,
   onUpdateTask,
   onDeleteTask,
+  onSyncTask,
 }) {
   const myProjects = useMemo(() => {
     const joined = projects.filter(
@@ -167,23 +168,33 @@ export default function EmployeeTaskView({
   const openTaskDetail = (task) => {
     setModalError('');
     setSelectedTaskId(task.id);
-    setDetailDraft({
-      title: task.title || '',
-      projectId: task.projectId || myProjects[0]?.id || '',
-      startDate: task.startDate || '',
-      endDate: task.endDate || '',
-      deadline: task.deadline || '',
-      estimatedVolume: Number(task.estimatedVolume ?? 1),
-      isDone: Boolean(task.isDone),
-      completedAt: task.completedAt || '',
-      status: task.status || 'pending_review',
-      attachments: Array.isArray(task.attachments) ? task.attachments : [],
-      deliverableUrl: task.deliverableUrl || '',
-      selfProgress: Number(task.selfProgress ?? 0),
-      selfKpiRating: task.selfKpiRating || 'pending',
-      selfScore: Number(task.selfScore ?? 0),
-      selfNote: task.selfNote || '',
+    const buildDraft = (t) => ({
+      title: t.title || '',
+      projectId: t.projectId || myProjects[0]?.id || '',
+      startDate: t.startDate || '',
+      endDate: t.endDate || '',
+      deadline: t.deadline || '',
+      estimatedVolume: Number(t.estimatedVolume ?? 1),
+      isDone: Boolean(t.isDone),
+      completedAt: t.completedAt || '',
+      status: t.status || 'pending_review',
+      attachments: Array.isArray(t.attachments) ? t.attachments : [],
+      deliverableUrl: t.deliverableUrl || '',
+      selfProgress: Number(t.selfProgress ?? 0),
+      selfKpiRating: t.selfKpiRating || 'pending',
+      selfScore: Number(t.selfScore ?? 0),
+      selfNote: t.selfNote || '',
     });
+    setDetailDraft(buildDraft(task));
+    api
+      .getTaskDetail(task.id, { action: 'open_task_detail' })
+      .then((res) => {
+        if (res?.task) {
+          onSyncTask?.(res.task);
+          setDetailDraft(buildDraft(res.task));
+        }
+      })
+      .catch(() => {});
   };
 
   const closeTaskDetail = () => {
@@ -208,6 +219,7 @@ export default function EmployeeTaskView({
       estimatedVolume: Math.min(1, remainingEst > 0 ? remainingEst : 0.5),
     }));
     setShowCreateModal(true);
+    api.getProjects({ scope: 'participating', action: 'open_create_task_modal' }).catch(() => {});
   };
 
   const handleUploadNew = async (e) => {

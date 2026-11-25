@@ -8,6 +8,7 @@ import {
   Shield,
   X,
 } from 'lucide-react';
+import { api } from '../api/client.js';
 
 const PROJECT_COLORS = ['#3370FF', '#00B365', '#7A35F0', '#F57C00', '#E11D48', '#0284C7'];
 
@@ -76,6 +77,8 @@ export default function ProjectManagementView({
     setEditingProject(proj);
     setEditMembersMap(initialMap);
     setErrMsg('');
+    api.getProjectDetail(proj.id, { action: 'open_members_modal' }).catch(() => {});
+    api.getUsers({ action: 'open_members_modal', projectId: proj.id }).catch(() => {});
   };
 
   const toggleEditMember = (uid) => {
@@ -196,6 +199,7 @@ export default function ProjectManagementView({
               onClick={() => {
                 setErrMsg('');
                 setShowCreateModal(true);
+                api.getUsers({ action: 'open_create_project_modal' }).catch(() => {});
               }}
               className="inline-flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl bg-[#3370FF] hover:bg-[#245BDB] text-white shadow-sm transition"
             >

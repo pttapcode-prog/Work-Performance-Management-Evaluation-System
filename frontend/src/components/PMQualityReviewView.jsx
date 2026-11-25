@@ -26,6 +26,7 @@ import {
   getTaskReviewAlert,
   summarizeReviewAlerts,
 } from '../utils/reviewAlertHelper.js';
+import { api } from '../api/client.js';
 
 const STATUS_OPTIONS = [
   { value: 'pending_review', label: 'Chờ đánh giá', badge: 'bg-amber-100 text-amber-800 border-amber-200' },
@@ -128,6 +129,7 @@ export default function PMQualityReviewView({
   initialProjectId = null,
   onClearInitialProject,
   onUpdateTask,
+  onSyncTask,
   onInspectEmployee,
 }) {
   const isDirector = currentUser?.role === 'DIRECTOR';
@@ -176,8 +178,59 @@ export default function PMQualityReviewView({
     if (initialProjectId) {
       setActiveProjectId(initialProjectId);
       setTaskFilter('all');
+      api
+        .getProjectDetail(initialProjectId, {
+          weekId: 'all',
+          filter: 'all',
+          action: 'open_project_tasks',
+        })
+        .catch(() => {});
     }
   }, [initialProjectId]);
+
+  const handleOpenProject = (pid) => {
+    setActiveProjectId(pid);
+    setTaskFilter('all');
+    api
+      .getProjectDetail(pid, {
+        weekId: weekScopeMode === 'selected' ? selectedWeekId : 'all',
+        filter: 'all',
+        action: 'open_project_tasks',
+      })
+      .catch(() => {});
+  };
+
+  const handleBackToProjects = () => {
+    setActiveProjectId(null);
+    onClearInitialProject?.();
+    api.getProjects({ scope: 'managed', action: 'back_to_project_list' }).catch(() => {});
+  };
+
+  const handleWeekScopeChange = (mode) => {
+    setWeekScopeMode(mode);
+    if (activeProjectId) {
+      api
+        .getProjectDetail(activeProjectId, {
+          weekId: mode === 'selected' ? selectedWeekId : 'all',
+          filter: taskFilter,
+          action: 'switch_week_scope',
+        })
+        .catch(() => {});
+    }
+  };
+
+  const handleTaskFilterChange = (nextFilter) => {
+    setTaskFilter(nextFilter);
+    if (activeProjectId) {
+      api
+        .getProjectDetail(activeProjectId, {
+          weekId: weekScopeMode === 'selected' ? selectedWeekId : 'all',
+          filter: nextFilter,
+          action: 'filter_project_tasks',
+        })
+        .catch(() => {});
+    }
+  };
 
   const currentWeekWindow = useMemo(() => getCalendarWeekWindowFromDate(now), [now]);
 
@@ -215,6 +268,20 @@ export default function PMQualityReviewView({
       pmFeedback: task.pmFeedback || '',
       status: task.status || 'pending_review',
     });
+    api
+      .getTaskDetail(task.id, { action: 'open_review_popup' })
+      .then((res) => {
+        if (res?.task) {
+          onSyncTask?.(res.task);
+          setModalDraft({
+            pmQualityRating: res.task.pmQualityRating || 'pending',
+            pmQualityScore: res.task.pmQualityScore ?? '',
+            pmFeedback: res.task.pmFeedback || '',
+            status: res.task.status || 'pending_review',
+          });
+        }
+      })
+      .catch(() => {});
   };
 
   const closeReviewModal = () => {
@@ -468,10 +535,7 @@ export default function PMQualityReviewView({
                   <button
                     key={proj.id}
                     type="button"
-                    onClick={() => {
-                      setActiveProjectId(proj.id);
-                      setTaskFilter('all');
-                    }}
+                    onClick={() => handleOpenProject(proj.id)}
                     className={`text-left bg-white rounded-2xl border shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col justify-between group ${
                       projAlerts.overdueCount > 0
                         ? 'border-rose-300 ring-1 ring-rose-100'
@@ -599,10 +663,7 @@ export default function PMQualityReviewView({
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => {
-                  setActiveProjectId(null);
-                  onClearInitialProject?.();
-                }}
+                onClick={handleBackToProjects}
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 transition"
               >
                 <ArrowLeft className="w-3.5 h-3.5" /> Danh sách Dự án
@@ -628,7 +689,7 @@ export default function PMQualityReviewView({
               <div className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-0.5">
                 <button
                   type="button"
-                  onClick={() => setWeekScopeMode('all')}
+                  onClick={() => handleWeekScopeChange('all')}
                   className={`px-2.5 py-1 rounded-lg font-semibold transition ${
                     weekScopeMode === 'all' ? 'bg-white text-blue-700 shadow-xs' : 'text-slate-600'
                   }`}
@@ -637,7 +698,7 @@ export default function PMQualityReviewView({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setWeekScopeMode('selected')}
+                  onClick={() => handleWeekScopeChange('selected')}
                   className={`px-2.5 py-1 rounded-lg font-semibold transition ${
                     weekScopeMode === 'selected' ? 'bg-white text-blue-700 shadow-xs' : 'text-slate-600'
                   }`}
@@ -649,7 +710,7 @@ export default function PMQualityReviewView({
               <div className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-0.5">
                 <button
                   type="button"
-                  onClick={() => setTaskFilter('all')}
+                  onClick={() => handleTaskFilterChange('all')}
                   className={`px-2.5 py-1 rounded-lg font-semibold transition ${
                     taskFilter === 'all' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
                   }`}
@@ -658,7 +719,7 @@ export default function PMQualityReviewView({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setTaskFilter('needs_review')}
+                  onClick={() => handleTaskFilterChange('needs_review')}
                   className={`px-2.5 py-1 rounded-lg font-semibold transition ${
                     taskFilter === 'needs_review' ? 'bg-amber-500 text-white shadow-xs' : 'text-slate-600'
                   }`}
@@ -667,7 +728,7 @@ export default function PMQualityReviewView({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setTaskFilter('warning_only')}
+                  onClick={() => handleTaskFilterChange('warning_only')}
                   className={`px-2.5 py-1 rounded-lg font-semibold transition ${
                     taskFilter === 'warning_only' ? 'bg-rose-600 text-white shadow-xs' : 'text-slate-600'
                   }`}

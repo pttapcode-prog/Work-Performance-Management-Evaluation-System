@@ -437,6 +437,7 @@ export async function createUser(userPayload) {
     id: userPayload.id || generateId('USR'),
     companyId: userPayload.companyId,
     name: userPayload.name,
+    username: userPayload.username || '',
     email: userPayload.email,
     password: userPayload.password || '123456',
     role: VALID_COMPANY_ROLES.has(userPayload.role) ? userPayload.role : 'MEMBER',

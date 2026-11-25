@@ -25,6 +25,10 @@ import {
   parseCompaniesExcel,
   parseCompanyAdminsExcel,
 } from '../utils/excelHelper.js';
+import {
+  generateAccountDefaults,
+  normalizeCompanyCodeSlug,
+} from '../utils/accountGenerator.js';
 
 const COMPANY_COLORS = ['#3370FF', '#00A870', '#0EA5E9', '#7C3AED', '#F57C00', '#E11D48', '#0F172A'];
 
@@ -41,16 +45,28 @@ export default function SystemAdminView() {
     industry: 'Công nghệ thông tin',
     color: '#0EA5E9',
     adminName: '',
+    adminUsername: '',
     adminEmail: '',
     adminPassword: '123456',
+  });
+  const [companyManual, setCompanyManual] = useState({
+    adminUsername: false,
+    adminEmail: false,
+    adminPassword: false,
   });
 
   const [adminForm, setAdminForm] = useState({
     companyId: '',
     name: '',
+    username: '',
     email: '',
     password: '123456',
     title: '',
+  });
+  const [adminManual, setAdminManual] = useState({
+    username: false,
+    email: false,
+    password: false,
   });
 
   const [resetPassMap, setResetPassMap] = useState({});
@@ -94,7 +110,16 @@ export default function SystemAdminView() {
       const res = await api.getSystemOverview();
       setOverview(res);
       if (res.companies?.length && !adminForm.companyId) {
-        setAdminForm((prev) => ({ ...prev, companyId: res.companies[0].id }));
+        const firstComp = res.companies[0];
+        const firstSlug = normalizeCompanyCodeSlug(firstComp.code);
+        setAdminForm((prev) => ({
+          ...prev,
+          companyId: firstComp.id,
+          password:
+            !adminManual.password && (!prev.password || prev.password === '123456') && firstSlug
+              ? `123456${firstSlug}`
+              : prev.password,
+        }));
       }
     } catch (err) {
       setErrorMsg(err.message);
@@ -112,6 +137,120 @@ export default function SystemAdminView() {
     setTimeout(() => setNotice(''), 4500);
   };
 
+  const handleCompanyCodeChange = (rawCode) => {
+    const nextCode = rawCode.toUpperCase();
+    const defaults = generateAccountDefaults(companyForm.adminName, nextCode);
+    setCompanyForm((prev) => {
+      const nextUsername = companyManual.adminUsername ? prev.adminUsername : defaults.username;
+      const nextEmail = companyManual.adminEmail
+        ? prev.adminEmail
+        : nextUsername && defaults.codeSlug
+        ? `${nextUsername}@${defaults.codeSlug}.com`
+        : '';
+      const nextPassword = companyManual.adminPassword ? prev.adminPassword : defaults.password;
+      return {
+        ...prev,
+        code: nextCode,
+        adminUsername: nextUsername,
+        adminEmail: nextEmail,
+        adminPassword: nextPassword,
+      };
+    });
+  };
+
+  const handleCompanyAdminNameChange = (nextName) => {
+    const defaults = generateAccountDefaults(nextName, companyForm.code);
+    setCompanyForm((prev) => {
+      const nextUsername = companyManual.adminUsername ? prev.adminUsername : defaults.username;
+      const nextEmail = companyManual.adminEmail
+        ? prev.adminEmail
+        : nextUsername && defaults.codeSlug
+        ? `${nextUsername}@${defaults.codeSlug}.com`
+        : '';
+      const nextPassword = companyManual.adminPassword ? prev.adminPassword : defaults.password;
+      return {
+        ...prev,
+        adminName: nextName,
+        adminUsername: nextUsername,
+        adminEmail: nextEmail,
+        adminPassword: nextPassword,
+      };
+    });
+  };
+
+  const handleCompanyAdminUsernameChange = (nextUsername) => {
+    const slug = normalizeCompanyCodeSlug(companyForm.code);
+    setCompanyManual((prev) => ({ ...prev, adminUsername: nextUsername.trim() !== '' }));
+    setCompanyForm((prev) => ({
+      ...prev,
+      adminUsername: nextUsername,
+      adminEmail: companyManual.adminEmail
+        ? prev.adminEmail
+        : nextUsername.trim() && slug
+        ? `${nextUsername.trim()}@${slug}.com`
+        : '',
+    }));
+  };
+
+  const getCompanyCodeById = (cid) =>
+    (overview?.companies || []).find((c) => c.id === cid)?.code || '';
+
+  const handleAdminCompanyChange = (nextCompanyId) => {
+    const compCode = getCompanyCodeById(nextCompanyId);
+    const defaults = generateAccountDefaults(adminForm.name, compCode);
+    setAdminForm((prev) => {
+      const nextUsername = adminManual.username ? prev.username : defaults.username;
+      const nextEmail = adminManual.email
+        ? prev.email
+        : nextUsername && defaults.codeSlug
+        ? `${nextUsername}@${defaults.codeSlug}.com`
+        : '';
+      const nextPassword = adminManual.password ? prev.password : defaults.password;
+      return {
+        ...prev,
+        companyId: nextCompanyId,
+        username: nextUsername,
+        email: nextEmail,
+        password: nextPassword,
+      };
+    });
+  };
+
+  const handleAdminNameChange = (nextName) => {
+    const compCode = getCompanyCodeById(adminForm.companyId);
+    const defaults = generateAccountDefaults(nextName, compCode);
+    setAdminForm((prev) => {
+      const nextUsername = adminManual.username ? prev.username : defaults.username;
+      const nextEmail = adminManual.email
+        ? prev.email
+        : nextUsername && defaults.codeSlug
+        ? `${nextUsername}@${defaults.codeSlug}.com`
+        : '';
+      const nextPassword = adminManual.password ? prev.password : defaults.password;
+      return {
+        ...prev,
+        name: nextName,
+        username: nextUsername,
+        email: nextEmail,
+        password: nextPassword,
+      };
+    });
+  };
+
+  const handleAdminUsernameChange = (nextUsername) => {
+    const slug = normalizeCompanyCodeSlug(getCompanyCodeById(adminForm.companyId));
+    setAdminManual((prev) => ({ ...prev, username: nextUsername.trim() !== '' }));
+    setAdminForm((prev) => ({
+      ...prev,
+      username: nextUsername,
+      email: adminManual.email
+        ? prev.email
+        : nextUsername.trim() && slug
+        ? `${nextUsername.trim()}@${slug}.com`
+        : '',
+    }));
+  };
+
   const handleCreateCompany = async (e) => {
     e.preventDefault();
     try {
@@ -124,9 +263,11 @@ export default function SystemAdminView() {
         industry: 'Công nghệ thông tin',
         color: '#0EA5E9',
         adminName: '',
+        adminUsername: '',
         adminEmail: '',
         adminPassword: '123456',
       });
+      setCompanyManual({ adminUsername: false, adminEmail: false, adminPassword: false });
       await loadOverview();
       showToast(
         `Đã tạo công ty "${res.company.name}"${
@@ -143,13 +284,16 @@ export default function SystemAdminView() {
     try {
       setErrorMsg('');
       const res = await api.systemCreateCompanyAdmin(adminForm);
+      const slug = normalizeCompanyCodeSlug(getCompanyCodeById(adminForm.companyId));
       setAdminForm((prev) => ({
         ...prev,
         name: '',
+        username: '',
         email: '',
-        password: '123456',
+        password: slug ? `123456${slug}` : '123456',
         title: '',
       }));
+      setAdminManual({ username: false, email: false, password: false });
       await loadOverview();
       showToast(`Đã cấp tài khoản Quản trị Công ty: ${res.adminUser.email}`);
     } catch (err) {
@@ -183,6 +327,7 @@ export default function SystemAdminView() {
       plan: comp.plan || 'Enterprise',
       color: comp.color || '#3370FF',
     });
+    api.getSystemOverview({ action: 'open_edit_company', companyId: comp.id }).catch(() => {});
   };
 
   const handleSaveCompany = async (e) => {
@@ -212,6 +357,7 @@ export default function SystemAdminView() {
       status: adm.status || 'active',
       password: '',
     });
+    api.getSystemOverview({ action: 'open_edit_admin', adminId: adm.id }).catch(() => {});
   };
 
   const handleSaveAdmin = async (e) => {
@@ -274,7 +420,9 @@ export default function SystemAdminView() {
           { key: 'domain', label: 'Domain' },
           { key: 'industry', label: 'Lĩnh vực' },
           { key: 'adminName', label: 'Họ tên Admin' },
+          { key: 'adminUsername', label: 'Tên TK Admin' },
           { key: 'adminEmail', label: 'Email Admin' },
+          { key: 'adminPassword', label: 'Mật khẩu Admin' },
         ],
         rows,
         importing: false,
@@ -299,6 +447,7 @@ export default function SystemAdminView() {
         columns: [
           { key: 'companyCode', label: 'Mã công ty' },
           { key: 'name', label: 'Họ và tên' },
+          { key: 'username', label: 'Tên tài khoản' },
           { key: 'email', label: 'Email đăng nhập' },
           { key: 'password', label: 'Mật khẩu' },
           { key: 'title', label: 'Chức danh' },
@@ -468,10 +617,8 @@ export default function SystemAdminView() {
                 type="text"
                 required
                 value={companyForm.code}
-                onChange={(e) =>
-                  setCompanyForm({ ...companyForm, code: e.target.value.toUpperCase() })
-                }
-                placeholder="VD: SUNTECH"
+                onChange={(e) => handleCompanyCodeChange(e.target.value)}
+                placeholder="VD: PTECH"
                 className="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono uppercase"
               />
             </div>
@@ -498,37 +645,60 @@ export default function SystemAdminView() {
             <div className="col-span-2 pt-2 border-t border-slate-100 font-semibold text-blue-800">
               Thông tin Tài khoản Admin của Công ty này (Role: COMPANY_ADMIN)
             </div>
-            <div>
-              <label className="block font-medium text-slate-600 mb-1">Họ tên Admin *</label>
+            <div className="col-span-2">
+              <label className="block font-medium text-slate-600 mb-1">
+                Họ tên Admin *{' '}
+                <span className="text-[10px] font-normal text-blue-600">
+                  (Tự điền tài khoản, email @macongty.com, mật khẩu 123456macongty)
+                </span>
+              </label>
               <input
                 type="text"
                 required
                 value={companyForm.adminName}
-                onChange={(e) => setCompanyForm({ ...companyForm, adminName: e.target.value })}
-                placeholder="VD: Trần Minh Khôi"
+                onChange={(e) => handleCompanyAdminNameChange(e.target.value)}
+                placeholder="VD: Phan Đình Thắng"
                 className="w-full px-3 py-2 rounded-lg border border-slate-300"
               />
             </div>
             <div>
+              <label className="block font-medium text-slate-600 mb-1">Tên tài khoản Admin</label>
+              <input
+                type="text"
+                value={companyForm.adminUsername}
+                onChange={(e) => handleCompanyAdminUsernameChange(e.target.value)}
+                placeholder="VD: thangPD"
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono bg-blue-50/30"
+              />
+            </div>
+            <div>
+              <label className="block font-medium text-slate-600 mb-1">Mật khẩu khởi tạo</label>
+              <input
+                type="text"
+                value={companyForm.adminPassword}
+                onChange={(e) => {
+                  setCompanyManual((prev) => ({ ...prev, adminPassword: true }));
+                  setCompanyForm({ ...companyForm, adminPassword: e.target.value });
+                }}
+                placeholder="VD: 123456ptech"
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono bg-blue-50/30"
+              />
+            </div>
+            <div className="col-span-2">
               <label className="block font-medium text-slate-600 mb-1">Email đăng nhập *</label>
               <input
                 type="email"
                 required
                 value={companyForm.adminEmail}
-                onChange={(e) => setCompanyForm({ ...companyForm, adminEmail: e.target.value })}
-                placeholder="khoi.tran@suntech.vn"
-                className="w-full px-3 py-2 rounded-lg border border-slate-300"
-              />
-            </div>
-            <div className="col-span-2">
-              <label className="block font-medium text-slate-600 mb-1">Mật khẩu khởi tạo</label>
-              <input
-                type="text"
-                value={companyForm.adminPassword}
-                onChange={(e) =>
-                  setCompanyForm({ ...companyForm, adminPassword: e.target.value })
-                }
-                className="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono"
+                onChange={(e) => {
+                  setCompanyManual((prev) => ({
+                    ...prev,
+                    adminEmail: e.target.value.trim() !== '',
+                  }));
+                  setCompanyForm({ ...companyForm, adminEmail: e.target.value });
+                }}
+                placeholder="VD: thangPD@ptech.com"
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono bg-blue-50/30"
               />
             </div>
           </div>
@@ -555,7 +725,7 @@ export default function SystemAdminView() {
                 <select
                   required
                   value={adminForm.companyId}
-                  onChange={(e) => setAdminForm({ ...adminForm, companyId: e.target.value })}
+                  onChange={(e) => handleAdminCompanyChange(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white font-semibold"
                 >
                   {companies.map((c) => (
@@ -565,26 +735,31 @@ export default function SystemAdminView() {
                   ))}
                 </select>
               </div>
-              <div>
-                <label className="block font-medium text-slate-600 mb-1">Họ tên Quản trị viên *</label>
+              <div className="col-span-2">
+                <label className="block font-medium text-slate-600 mb-1">
+                  Họ tên Quản trị viên *{' '}
+                  <span className="text-[10px] font-normal text-indigo-600">
+                    (Tự điền tài khoản, email, mật khẩu theo mã công ty)
+                  </span>
+                </label>
                 <input
                   type="text"
                   required
                   value={adminForm.name}
-                  onChange={(e) => setAdminForm({ ...adminForm, name: e.target.value })}
-                  placeholder="VD: Nguyễn Thị Lan"
+                  onChange={(e) => handleAdminNameChange(e.target.value)}
+                  placeholder="VD: Phan Đình Thắng"
                   className="w-full px-3 py-2 rounded-lg border border-slate-300"
                 />
               </div>
               <div>
-                <label className="block font-medium text-slate-600 mb-1">Email đăng nhập *</label>
+                <label className="block font-medium text-slate-600 mb-1">Tên tài khoản *</label>
                 <input
-                  type="email"
+                  type="text"
                   required
-                  value={adminForm.email}
-                  onChange={(e) => setAdminForm({ ...adminForm, email: e.target.value })}
-                  placeholder="lan.nguyen@trinam.vn"
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300"
+                  value={adminForm.username}
+                  onChange={(e) => handleAdminUsernameChange(e.target.value)}
+                  placeholder="VD: thangPD"
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono bg-indigo-50/30"
                 />
               </div>
               <div>
@@ -593,8 +768,26 @@ export default function SystemAdminView() {
                   type="text"
                   required
                   value={adminForm.password}
-                  onChange={(e) => setAdminForm({ ...adminForm, password: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono"
+                  onChange={(e) => {
+                    setAdminManual((prev) => ({ ...prev, password: true }));
+                    setAdminForm({ ...adminForm, password: e.target.value });
+                  }}
+                  placeholder="VD: 123456ptech"
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono bg-indigo-50/30"
+                />
+              </div>
+              <div>
+                <label className="block font-medium text-slate-600 mb-1">Email đăng nhập *</label>
+                <input
+                  type="email"
+                  required
+                  value={adminForm.email}
+                  onChange={(e) => {
+                    setAdminManual((prev) => ({ ...prev, email: e.target.value.trim() !== '' }));
+                    setAdminForm({ ...adminForm, email: e.target.value });
+                  }}
+                  placeholder="VD: thangPD@ptech.com"
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono bg-indigo-50/30"
                 />
               </div>
               <div>

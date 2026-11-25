@@ -81,6 +81,35 @@ function resolveWeekLabel(weeks, weekId) {
   return found ? found.label : weekId;
 }
 
+function stripVietnameseDiacritics(str) {
+  return String(str || '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function generateAccountDefaults(fullName, companyCode) {
+  const tokens = stripVietnameseDiacritics(fullName)
+    .trim()
+    .split(/\s+/)
+    .map((w) => w.replace(/[^a-zA-Z0-9]/g, ''))
+    .filter(Boolean);
+  const username =
+    tokens.length === 0
+      ? ''
+      : `${tokens[tokens.length - 1].toLowerCase()}${tokens
+          .slice(0, -1)
+          .map((w) => w[0].toUpperCase())
+          .join('')}`;
+  const codeSlug = stripVietnameseDiacritics(companyCode)
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+  const email = username && codeSlug ? `${username}@${codeSlug}.com` : '';
+  const password = codeSlug ? `123456${codeSlug}` : '123456';
+  return { username, email, password, codeSlug };
+}
+
 function isProjectMember(project, user) {
   if (!project || !user) return false;
   if (user.role === 'DIRECTOR') return true;
@@ -284,8 +313,11 @@ router.post('/auth/login', async (req, res) => {
     }
 
     const state = await getState();
+    const loginIdentifier = String(email).trim().toLowerCase();
     const user = state.users.find(
-      (u) => u.email.toLowerCase() === String(email).trim().toLowerCase()
+      (u) =>
+        u.email.toLowerCase() === loginIdentifier ||
+        (u.username && String(u.username).trim().toLowerCase() === loginIdentifier)
     );
 
     if (!user || user.password !== String(password)) {
@@ -332,6 +364,14 @@ router.get('/auth/me', async (req, res) => {
     company: req.auth.currentCompany,
     permissions: req.auth.permissions,
     dbInfo: getDbInfo(),
+  });
+});
+
+router.post('/auth/logout', async (req, res) => {
+  res.json({
+    ok: true,
+    userId: req.auth?.actor?.id || null,
+    loggedOutAt: new Date().toISOString(),
   });
 });
 
@@ -388,6 +428,7 @@ router.post('/system/companies', requireSystemAdmin, async (req, res) => {
       plan,
       color,
       adminName,
+      adminUsername,
       adminEmail,
       adminPassword,
     } = req.body || {};
@@ -396,18 +437,24 @@ router.post('/system/companies', requireSystemAdmin, async (req, res) => {
       return res.status(400).json({ error: 'Vui lòng nhập Tên công ty và Mã công ty.' });
     }
 
-    if (adminEmail) {
+    const cleanCode = code.trim().toUpperCase();
+    const adminDefaults = generateAccountDefaults(adminName, cleanCode);
+    const resolvedAdminUsername = (adminUsername || '').trim() || adminDefaults.username;
+    const resolvedAdminEmail = (adminEmail || '').trim() || (adminName?.trim() ? adminDefaults.email : '');
+    const resolvedAdminPassword = (adminPassword || '').trim() || adminDefaults.password;
+
+    if (resolvedAdminEmail) {
       const dup = req.fullState.users.find(
-        (u) => u.email.toLowerCase() === adminEmail.trim().toLowerCase()
+        (u) => u.email.toLowerCase() === resolvedAdminEmail.toLowerCase()
       );
       if (dup) {
-        return res.status(409).json({ error: `Email Admin ${adminEmail} đã tồn tại.` });
+        return res.status(409).json({ error: `Email Admin ${resolvedAdminEmail} đã tồn tại.` });
       }
     }
 
     const company = await createCompany({
       name: name.trim(),
-      code: code.trim().toUpperCase(),
+      code: cleanCode,
       domain: (domain || '').trim(),
       industry: industry || 'Công nghệ thông tin',
       plan: plan || 'Enterprise',
@@ -415,12 +462,13 @@ router.post('/system/companies', requireSystemAdmin, async (req, res) => {
     });
 
     let adminUser = null;
-    if (adminName && adminName.trim() && adminEmail && adminEmail.trim()) {
+    if (adminName && adminName.trim() && resolvedAdminEmail) {
       const created = await createUser({
         companyId: company.id,
         name: adminName.trim(),
-        email: adminEmail.trim(),
-        password: adminPassword?.trim() || '123456',
+        username: resolvedAdminUsername,
+        email: resolvedAdminEmail,
+        password: resolvedAdminPassword,
         role: 'COMPANY_ADMIN',
         title: `Admin Công ty (${company.code})`,
         department: 'Quản trị Tài khoản Công ty',
@@ -464,8 +512,11 @@ router.post('/system/companies/bulk', requireSystemAdmin, async (req, res) => {
       const plan = String(row.plan || '').trim() || 'Enterprise';
       const color = String(row.color || '').trim() || palette[i % palette.length];
       const adminName = String(row.adminName || '').trim();
-      const adminEmail = String(row.adminEmail || '').trim();
-      const adminPassword = String(row.adminPassword || '').trim() || '123456';
+      const adminDefaults = generateAccountDefaults(adminName, code);
+      const adminUsername = String(row.adminUsername || '').trim() || adminDefaults.username;
+      const adminEmail =
+        String(row.adminEmail || '').trim() || (adminName ? adminDefaults.email : '');
+      const adminPassword = String(row.adminPassword || '').trim() || adminDefaults.password;
 
       if (!name || !code) {
         errors.push({ row: rowNum, message: 'Thiếu Tên công ty hoặc Mã công ty.' });
@@ -497,6 +548,7 @@ router.post('/system/companies/bulk', requireSystemAdmin, async (req, res) => {
         const createdAdmin = await createUser({
           companyId: company.id,
           name: adminName || `Admin ${name}`,
+          username: adminUsername,
           email: adminEmail,
           password: adminPassword,
           role: 'COMPANY_ADMIN',
@@ -575,10 +627,10 @@ router.delete('/system/companies/:id', requireSystemAdmin, async (req, res) => {
 
 router.post('/system/company-admins', requireSystemAdmin, async (req, res) => {
   try {
-    const { companyId, name, email, password, title } = req.body || {};
-    if (!companyId || !name || !name.trim() || !email || !email.trim()) {
+    const { companyId, name, username, email, password, title } = req.body || {};
+    if (!companyId || !name || !name.trim()) {
       return res.status(400).json({
-        error: 'Vui lòng chọn Công ty, nhập Họ tên và Email cho tài khoản Lãnh đạo / Quản trị Công ty.',
+        error: 'Vui lòng chọn Công ty và nhập Họ tên cho tài khoản Quản trị Công ty.',
       });
     }
     const targetCompany = req.fullState.companies.find((c) => c.id === companyId);
@@ -586,18 +638,30 @@ router.post('/system/company-admins', requireSystemAdmin, async (req, res) => {
       return res.status(404).json({ error: 'Công ty được chọn không tồn tại.' });
     }
 
+    const defaults = generateAccountDefaults(name, targetCompany.code);
+    const resolvedUsername = (username || '').trim() || defaults.username;
+    const resolvedEmail = (email || '').trim() || defaults.email;
+    const resolvedPassword = (password || '').trim() || defaults.password;
+
+    if (!resolvedEmail) {
+      return res.status(400).json({
+        error: 'Vui lòng nhập Email đăng nhập cho tài khoản Quản trị Công ty.',
+      });
+    }
+
     const dup = req.fullState.users.find(
-      (u) => u.email.toLowerCase() === email.trim().toLowerCase()
+      (u) => u.email.toLowerCase() === resolvedEmail.toLowerCase()
     );
     if (dup) {
-      return res.status(409).json({ error: `Email ${email} đã tồn tại trong hệ thống.` });
+      return res.status(409).json({ error: `Email ${resolvedEmail} đã tồn tại trong hệ thống.` });
     }
 
     const created = await createUser({
       companyId: targetCompany.id,
       name: name.trim(),
-      email: email.trim(),
-      password: password?.trim() || '123456',
+      username: resolvedUsername,
+      email: resolvedEmail,
+      password: resolvedPassword,
       role: 'COMPANY_ADMIN',
       title: title?.trim() || `Admin Công ty ${targetCompany.name}`,
       department: 'Quản trị Tài khoản Công ty',
@@ -630,12 +694,10 @@ router.post('/system/company-admins/bulk', requireSystemAdmin, async (req, res) 
       const rowNum = row._rowNumber || i + 2;
       const companyRef = String(row.companyCode || row.companyId || row.companyName || '').trim();
       const name = String(row.name || '').trim();
-      const email = String(row.email || '').trim();
-      const password = String(row.password || '').trim() || '123456';
       const title = String(row.title || '').trim();
 
-      if (!companyRef || !name || !email) {
-        errors.push({ row: rowNum, message: 'Thiếu Mã công ty, Họ tên hoặc Email đăng nhập.' });
+      if (!companyRef || !name) {
+        errors.push({ row: rowNum, message: 'Thiếu Mã công ty hoặc Họ và tên.' });
         continue;
       }
 
@@ -650,6 +712,16 @@ router.post('/system/company-admins/bulk', requireSystemAdmin, async (req, res) 
         continue;
       }
 
+      const defaults = generateAccountDefaults(name, targetCompany.code);
+      const username = String(row.username || '').trim() || defaults.username;
+      const email = String(row.email || '').trim() || defaults.email;
+      const password = String(row.password || '').trim() || defaults.password;
+
+      if (!email) {
+        errors.push({ row: rowNum, message: 'Thiếu Email đăng nhập.' });
+        continue;
+      }
+
       if (existingEmails.has(email.toLowerCase())) {
         errors.push({ row: rowNum, message: `Email "${email}" đã tồn tại trong hệ thống.` });
         continue;
@@ -659,6 +731,7 @@ router.post('/system/company-admins/bulk', requireSystemAdmin, async (req, res) 
       const created = await createUser({
         companyId: targetCompany.id,
         name,
+        username,
         email,
         password,
         role: 'COMPANY_ADMIN',
@@ -761,9 +834,10 @@ router.get('/company-admin/users', requireCompanyAdmin, async (req, res) => {
 
 router.post('/users', requireCompanyAdmin, async (req, res) => {
   try {
-    const { companyId } = req.auth;
+    const { companyId, currentCompany } = req.auth;
     const {
       name,
+      username,
       email,
       password,
       role = 'MEMBER',
@@ -771,8 +845,17 @@ router.post('/users', requireCompanyAdmin, async (req, res) => {
       department = '',
     } = req.body || {};
 
-    if (!name || !name.trim() || !email || !email.trim()) {
-      return res.status(400).json({ error: 'Vui lòng nhập Họ tên và Email nhân viên.' });
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'Vui lòng nhập Họ và tên nhân viên.' });
+    }
+
+    const defaults = generateAccountDefaults(name, currentCompany?.code || '');
+    const resolvedUsername = (username || '').trim() || defaults.username;
+    const resolvedEmail = (email || '').trim() || defaults.email;
+    const resolvedPassword = (password || '').trim() || defaults.password;
+
+    if (!resolvedEmail) {
+      return res.status(400).json({ error: 'Vui lòng nhập Email nhân viên.' });
     }
 
     const allowedCompanyRoles = ['DIRECTOR', 'MEMBER'];
@@ -784,17 +867,18 @@ router.post('/users', requireCompanyAdmin, async (req, res) => {
     }
 
     const duplicate = req.fullState.users.find(
-      (u) => u.email.toLowerCase() === email.trim().toLowerCase()
+      (u) => u.email.toLowerCase() === resolvedEmail.toLowerCase()
     );
     if (duplicate) {
-      return res.status(409).json({ error: `Email ${email} đã tồn tại trong hệ thống.` });
+      return res.status(409).json({ error: `Email ${resolvedEmail} đã tồn tại trong hệ thống.` });
     }
 
     const createdUser = await createUser({
       companyId,
       name: name.trim(),
-      email: email.trim(),
-      password: password?.trim() || '123456',
+      username: resolvedUsername,
+      email: resolvedEmail,
+      password: resolvedPassword,
       role,
       title: title.trim() || (role === 'DIRECTOR' ? 'Lãnh đạo Công ty' : 'Nhân viên'),
       department: department.trim() || 'Khối Công nghệ',
@@ -811,7 +895,7 @@ router.post('/users', requireCompanyAdmin, async (req, res) => {
 
 router.post('/users/bulk', requireCompanyAdmin, async (req, res) => {
   try {
-    const { companyId } = req.auth;
+    const { companyId, currentCompany } = req.auth;
     const rawRows = Array.isArray(req.body?.rows)
       ? req.body.rows
       : Array.isArray(req.body?.users)
@@ -829,10 +913,20 @@ router.post('/users/bulk', requireCompanyAdmin, async (req, res) => {
       const raw = String(val || '').trim();
       if (!raw) return 'MEMBER';
       const upper = raw.toUpperCase();
-      if (upper === 'DIRECTOR' || raw.toLowerCase().includes('lãnh đạo') || raw.toLowerCase().includes('lanh dao')) {
+      if (
+        upper === 'DIRECTOR' ||
+        upper.includes('DIRECTOR') ||
+        raw.toLowerCase().includes('lãnh đạo') ||
+        raw.toLowerCase().includes('lanh dao')
+      ) {
         return 'DIRECTOR';
       }
-      if (upper === 'MEMBER' || raw.toLowerCase().includes('nhân viên') || raw.toLowerCase().includes('nhan vien')) {
+      if (
+        upper === 'MEMBER' ||
+        upper.includes('MEMBER') ||
+        raw.toLowerCase().includes('nhân viên') ||
+        raw.toLowerCase().includes('nhan vien')
+      ) {
         return 'MEMBER';
       }
       return null;
@@ -842,14 +936,21 @@ router.post('/users/bulk', requireCompanyAdmin, async (req, res) => {
       const row = rawRows[i] || {};
       const rowNum = row._rowNumber || i + 2;
       const name = String(row.name || '').trim();
-      const email = String(row.email || '').trim();
-      const password = String(row.password || '').trim() || '123456';
+      if (!name) {
+        errors.push({ row: rowNum, message: 'Thiếu Họ và tên.' });
+        continue;
+      }
+
+      const defaults = generateAccountDefaults(name, currentCompany?.code || '');
+      const username = String(row.username || '').trim() || defaults.username;
+      const email = String(row.email || '').trim() || defaults.email;
+      const password = String(row.password || '').trim() || defaults.password;
       const role = normalizeRole(row.role);
       const title = String(row.title || '').trim();
       const department = String(row.department || '').trim();
 
-      if (!name || !email) {
-        errors.push({ row: rowNum, message: 'Thiếu Họ và tên hoặc Email đăng nhập.' });
+      if (!email) {
+        errors.push({ row: rowNum, message: 'Thiếu Email đăng nhập.' });
         continue;
       }
       if (!role) {
@@ -868,6 +969,7 @@ router.post('/users/bulk', requireCompanyAdmin, async (req, res) => {
       const created = await createUser({
         companyId,
         name,
+        username,
         email,
         password,
         role,
@@ -1120,6 +1222,120 @@ router.post('/upload', async (req, res) => {
   }
 });
 
+// === WORKSPACE USERS & PROJECTS (READ ENDPOINTS FOR LIVE NETWORK SYNC) ===
+router.get('/users', async (req, res) => {
+  try {
+    const { actor, companyId, permissions } = req.auth;
+    const scoped = scopeStateToCompany(req.fullState, companyId);
+    const workspaceUsers = scoped.users.filter((u) => u.role === 'DIRECTOR' || u.role === 'MEMBER');
+
+    if (actor.role === 'DIRECTOR') {
+      return res.json({ users: workspaceUsers, managedUsers: workspaceUsers });
+    }
+    if (permissions.isProjectPm) {
+      const pmSet = new Set(permissions.pmProjectIds || []);
+      const managedProjects = scoped.projects.filter((p) => pmSet.has(p.id));
+      const managedMemberIds = getProjectMemberIdSet(managedProjects);
+      return res.json({
+        users: workspaceUsers,
+        managedUsers: workspaceUsers.filter((u) => managedMemberIds.has(u.id)),
+      });
+    }
+    return res.json({ users: [actor], managedUsers: [actor] });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/projects', async (req, res) => {
+  try {
+    const { actor, companyId, permissions } = req.auth;
+    const { scope = 'all', filter = 'all' } = req.query;
+    const scoped = scopeStateToCompany(req.fullState, companyId);
+    scoped.users = scoped.users.filter((u) => u.role === 'DIRECTOR' || u.role === 'MEMBER');
+
+    const userById = Object.fromEntries(scoped.users.map((u) => [u.id, u]));
+    const attachPmName = (proj) => {
+      const pmEntry = (proj.members || []).find((m) => m.projectRole === 'PM');
+      const pmUser = userById[pmEntry?.userId || proj.pmId];
+      return { ...proj, pmName: pmUser?.name || '' };
+    };
+
+    const visibleProjects = scoped.projects.filter((p) => isProjectMember(p, actor));
+    const pmSet = new Set(permissions.pmProjectIds || []);
+    const managedProjects =
+      actor.role === 'DIRECTOR'
+        ? scoped.projects
+        : scoped.projects.filter((p) => pmSet.has(p.id));
+
+    return res.json({
+      scope,
+      filter,
+      projects: (actor.role === 'DIRECTOR' ? scoped.projects : visibleProjects).map(attachPmName),
+      managedProjects: managedProjects.map(attachPmName),
+      allCompanyProjects: (actor.role === 'DIRECTOR' ? scoped.projects : managedProjects).map(
+        attachPmName
+      ),
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/projects/:id', async (req, res) => {
+  try {
+    const { actor, companyId, permissions } = req.auth;
+    const { weekId = 'all', filter = 'all' } = req.query;
+    const scoped = scopeStateToCompany(req.fullState, companyId);
+    scoped.users = scoped.users.filter((u) => u.role === 'DIRECTOR' || u.role === 'MEMBER');
+
+    const project = scoped.projects.find((p) => p.id === req.params.id);
+    if (!project) {
+      return res.status(404).json({ error: 'Không tìm thấy dự án trong công ty của bạn.' });
+    }
+    if (!isProjectMember(project, actor)) {
+      return res.status(403).json({ error: 'Bạn không có quyền xem thông tin dự án này.' });
+    }
+
+    const userById = Object.fromEntries(scoped.users.map((u) => [u.id, u]));
+    const pmEntry = (project.members || []).find((m) => m.projectRole === 'PM');
+    const enrichedProject = {
+      ...project,
+      pmName: userById[pmEntry?.userId || project.pmId]?.name || '',
+    };
+
+    const actorProjectRole = getUserProjectRole(project, actor.id);
+    const canSeeAllProjectTasks = actor.role === 'DIRECTOR' || actorProjectRole === 'PM';
+
+    let projectTasks = buildEnrichedTasks(scoped, REFERENCE_DATE).filter(
+      (t) => t.projectId === project.id
+    );
+    if (!canSeeAllProjectTasks) {
+      projectTasks = projectTasks.filter((t) => t.assigneeId === actor.id);
+    }
+    if (weekId && weekId !== 'all') {
+      projectTasks = projectTasks.filter((t) => t.weekId === weekId);
+    }
+
+    const memberDetails = (project.members || [])
+      .map((m) => ({
+        ...m,
+        user: userById[m.userId] || null,
+      }))
+      .filter((m) => m.user);
+
+    return res.json({
+      project: enrichedProject,
+      members: memberDetails,
+      tasks: projectTasks,
+      filter,
+      weekId,
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 // === PROJECT CREATION (DIRECTOR ONLY) & PER-PROJECT ROLE ASSIGNMENT (PM / DEV / BA / TEST) ===
 router.post('/projects', async (req, res) => {
   try {
@@ -1284,7 +1500,13 @@ router.delete('/projects/:id', async (req, res) => {
 router.get('/tasks', async (req, res) => {
   try {
     const { actor, companyId, permissions } = req.auth;
-    const { weekId = 'all', projectId = 'all', assigneeId = 'all' } = req.query;
+    const {
+      weekId = 'all',
+      projectId = 'all',
+      assigneeId = 'all',
+      filter = 'all',
+      search = '',
+    } = req.query;
     const scoped = scopeStateToCompany(req.fullState, companyId);
     const visibleProjectIds = new Set(
       scoped.projects.filter((p) => isProjectMember(p, actor)).map((p) => p.id)
@@ -1307,9 +1529,57 @@ router.get('/tasks', async (req, res) => {
     if (projectId !== 'all') tasks = tasks.filter((t) => t.projectId === projectId);
     if (assigneeId !== 'all') tasks = tasks.filter((t) => t.assigneeId === assigneeId);
 
-    res.json({ tasks });
+    if (filter === 'low_quality') tasks = tasks.filter((t) => t.isLowQuality);
+    else if (filter === 'late') tasks = tasks.filter((t) => t.isLate);
+    else if (filter === 'gap') tasks = tasks.filter((t) => t.hasSignificantGap);
+    else if (filter === 'pending_pm' || filter === 'needs_review') {
+      tasks = tasks.filter(
+        (t) =>
+          t.status !== 'cancelled' &&
+          (!t.pmQualityRating || t.pmQualityRating === 'pending' || t.status === 'pending_review')
+      );
+    }
+
+    if (search && String(search).trim()) {
+      const q = String(search).trim().toLowerCase();
+      tasks = tasks.filter(
+        (t) =>
+          (t.title || '').toLowerCase().includes(q) ||
+          (t.assigneeName || '').toLowerCase().includes(q) ||
+          (t.projectName || '').toLowerCase().includes(q) ||
+          (t.projectCode || '').toLowerCase().includes(q)
+      );
+    }
+
+    res.json({ tasks, total: tasks.length, filter, weekId, projectId });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/tasks/:id', async (req, res) => {
+  try {
+    const { actor, companyId, permissions } = req.auth;
+    const scoped = scopeStateToCompany(req.fullState, companyId);
+    const enrichedTasks = buildEnrichedTasks(scoped, REFERENCE_DATE);
+    const task = enrichedTasks.find((t) => t.id === req.params.id);
+
+    if (!task) {
+      return res.status(404).json({ error: 'Không tìm thấy công việc này.' });
+    }
+
+    const canAccess =
+      actor.role === 'DIRECTOR' ||
+      task.assigneeId === actor.id ||
+      (permissions.pmProjectIds || []).includes(task.projectId);
+
+    if (!canAccess) {
+      return res.status(403).json({ error: 'Bạn không có quyền xem chi tiết công việc này.' });
+    }
+
+    return res.json({ task });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 });
 
@@ -1552,12 +1822,37 @@ router.delete('/tasks/:id', async (req, res) => {
 
 router.get('/kpi/summary', async (req, res) => {
   try {
-    const { companyId } = req.auth;
+    const { actor, companyId, permissions } = req.auth;
     const weekId = req.query.weekId || '2026-W47';
     const projectId = req.query.projectId || 'all';
     const scoped = scopeStateToCompany(req.fullState, companyId);
-    const enrichedTasks = buildEnrichedTasks(scoped, REFERENCE_DATE);
-    const summary = buildWeeklySummary(enrichedTasks, scoped.users, scoped.projects, weekId, projectId);
+    scoped.users = scoped.users.filter((u) => u.role === 'DIRECTOR' || u.role === 'MEMBER');
+
+    let visibleProjects = scoped.projects;
+    let visibleUsers = scoped.users;
+    let enrichedTasks = buildEnrichedTasks(scoped, REFERENCE_DATE);
+
+    if (actor.role !== 'DIRECTOR') {
+      if (permissions.isProjectPm) {
+        const pmSet = new Set(permissions.pmProjectIds || []);
+        visibleProjects = scoped.projects.filter((p) => pmSet.has(p.id));
+        const managedMemberIds = getProjectMemberIdSet(visibleProjects);
+        visibleUsers = scoped.users.filter((u) => managedMemberIds.has(u.id));
+        enrichedTasks = enrichedTasks.filter((t) => pmSet.has(t.projectId));
+      } else {
+        visibleProjects = scoped.projects.filter((p) => isProjectMember(p, actor));
+        visibleUsers = scoped.users.filter((u) => u.id === actor.id);
+        enrichedTasks = enrichedTasks.filter((t) => t.assigneeId === actor.id);
+      }
+    }
+
+    const summary = buildWeeklySummary(
+      enrichedTasks,
+      visibleUsers,
+      visibleProjects,
+      weekId,
+      projectId
+    );
     res.json(summary);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -1589,7 +1884,8 @@ router.get('/ai/watchdog', async (req, res) => {
       enrichedTasks = enrichedTasks.filter((t) => pmSet.has(t.projectId));
     }
     const summary = buildWeeklySummary(enrichedTasks, visibleUsers, visibleProjects, weekId, projectId);
-    const weekLabel = resolveWeekLabel(scoped.weeks, weekId);
+    const weeksWithCurrent = ensureCurrentCalendarWeek(scoped.weeks);
+    const weekLabel = resolveWeekLabel(weeksWithCurrent, weekId);
     const watchdog = generateWatchdogReport(summary, weekLabel);
     return res.json(watchdog);
   } catch (err) {

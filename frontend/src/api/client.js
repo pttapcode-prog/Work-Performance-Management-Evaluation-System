@@ -1,4 +1,11 @@
-const API_BASE = 'https://work-performance-management-evaluation.onrender.com';
+const RAW_API_BASE = (
+  import.meta.env.VITE_API_BASE_URL ||
+  'https://work-performance-management-evaluation.onrender.com/api'
+).replace(/\/+$/, '');
+const API_BASE =
+  RAW_API_BASE === '/api' || RAW_API_BASE.endsWith('/api')
+    ? RAW_API_BASE
+    : `${RAW_API_BASE}/api`;
 const TOKEN_KEY = 'wpmes_auth_token';
 
 export function getAuthToken() {
@@ -11,6 +18,17 @@ export function setAuthToken(token) {
   } else {
     localStorage.removeItem(TOKEN_KEY);
   }
+}
+
+function buildQuery(params = {}) {
+  const qs = new URLSearchParams();
+  Object.entries(params || {}).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== '') {
+      qs.set(k, String(v));
+    }
+  });
+  const str = qs.toString();
+  return str ? `?${str}` : '';
 }
 
 async function request(path, options = {}) {
@@ -45,6 +63,9 @@ export const api = {
       body: JSON.stringify({ email, password }),
     });
   },
+  logout() {
+    return request('/auth/logout', { method: 'POST' });
+  },
   getMe() {
     return request('/auth/me');
   },
@@ -53,8 +74,8 @@ export const api = {
   },
 
   // System Admin (Super Admin)
-  getSystemOverview() {
-    return request('/system/overview');
+  getSystemOverview(params = {}) {
+    return request(`/system/overview${buildQuery(params)}`);
   },
   systemCreateCompany(payload) {
     return request('/system/companies', {
@@ -104,8 +125,8 @@ export const api = {
   },
 
   // Company Admin (Account Management only)
-  getCompanyAdminUsers() {
-    return request('/company-admin/users');
+  getCompanyAdminUsers(params = {}) {
+    return request(`/company-admin/users${buildQuery(params)}`);
   },
 
   // File Attachment Upload
@@ -132,11 +153,33 @@ export const api = {
     });
   },
 
-  // Company Bootstrap & Workspace
-  getBootstrap(weekId = '2026-W47', projectId = 'all') {
-    const params = new URLSearchParams({ weekId, projectId });
-    return request(`/bootstrap?${params.toString()}`);
+  // Company Bootstrap & Live Workspace REST Endpoints
+  getBootstrap(weekId = '2026-W47', projectId = 'all', extra = {}) {
+    return request(`/bootstrap${buildQuery({ weekId, projectId, ...extra })}`);
   },
+  getUsers(params = {}) {
+    return request(`/users${buildQuery(params)}`);
+  },
+  getProjects(params = {}) {
+    return request(`/projects${buildQuery(params)}`);
+  },
+  getProjectDetail(projectId, params = {}) {
+    return request(`/projects/${encodeURIComponent(projectId)}${buildQuery(params)}`);
+  },
+  getTasks(params = {}) {
+    return request(`/tasks${buildQuery(params)}`);
+  },
+  getTaskDetail(taskId, params = {}) {
+    return request(`/tasks/${encodeURIComponent(taskId)}${buildQuery(params)}`);
+  },
+  getKpiSummary(params = {}) {
+    return request(`/kpi/summary${buildQuery(params)}`);
+  },
+  getAiWatchdog(params = {}) {
+    return request(`/ai/watchdog${buildQuery(params)}`);
+  },
+
+  // Mutations
   createUser(payload) {
     return request('/users', {
       method: 'POST',
@@ -196,8 +239,7 @@ export const api = {
     });
   },
   getEmployee360(userId, weekId = '2026-W47') {
-    const params = new URLSearchParams({ userId, weekId });
-    return request(`/ai/employee-360?${params.toString()}`);
+    return request(`/ai/employee-360${buildQuery({ userId, weekId })}`);
   },
   parseSmartTasks(text, weekId, assigneeId) {
     return request('/ai/parse-tasks', {

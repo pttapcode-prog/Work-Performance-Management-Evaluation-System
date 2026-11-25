@@ -118,7 +118,12 @@ export default function App() {
     setActiveTab(pickDefaultTab(res.permissions));
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await api.logout();
+    } catch {
+      // Ignore network errors during logout so session always clears cleanly
+    }
     setAuthToken('');
     setAuthUser(null);
     setAuthCompany(null);
@@ -128,6 +133,138 @@ export default function App() {
     setInspectUserId(null);
     setReviewFocusProjectId(null);
   };
+
+  const handleSyncSingleTask = useCallback((freshTask) => {
+    if (!freshTask?.id) return;
+    setBootstrap((prev) => {
+      if (!prev) return prev;
+      const exists = (prev.tasks || []).some((t) => t.id === freshTask.id);
+      const nextTasks = exists
+        ? prev.tasks.map((t) => (t.id === freshTask.id ? freshTask : t))
+        : [freshTask, ...(prev.tasks || [])];
+      return { ...prev, tasks: nextTasks };
+    });
+  }, []);
+
+  const handleOpenCopilot = useCallback(() => {
+    setCopilotOpen(true);
+    api
+      .getAiWatchdog({ weekId, projectId, action: 'open_copilot' })
+      .then((wd) => {
+        setBootstrap((prev) => (prev ? { ...prev, watchdog: wd } : prev));
+      })
+      .catch(() => {});
+  }, [weekId, projectId]);
+
+  const handleTabChange = useCallback(
+    (nextTab) => {
+      setActiveTab(nextTab);
+      if (nextTab === 'pm_review') {
+        setReviewFocusProjectId(null);
+      }
+      if (!authUser || authUser.role === 'SYSTEM_ADMIN' || authUser.role === 'COMPANY_ADMIN') {
+        return;
+      }
+
+      if (nextTab === 'ai_dashboard') {
+        Promise.all([
+          api.getKpiSummary({ weekId, projectId, tab: 'ai_dashboard' }),
+          api.getAiWatchdog({ weekId, projectId, tab: 'ai_dashboard' }),
+          api.getProjects({ scope: 'managed', tab: 'ai_dashboard' }),
+        ])
+          .then(([sumRes, wdRes, projRes]) => {
+            setBootstrap((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    summary: sumRes,
+                    watchdog: wdRes,
+                    projects: projRes.projects || prev.projects,
+                    managedProjects: projRes.managedProjects || prev.managedProjects,
+                  }
+                : prev
+            );
+          })
+          .catch(() => {});
+      } else if (nextTab === 'pm_review') {
+        Promise.all([
+          api.getProjects({ scope: 'managed', tab: 'pm_review' }),
+          api.getTasks({ weekId: 'all', projectId, tab: 'pm_review' }),
+        ])
+          .then(([projRes, taskRes]) => {
+            setBootstrap((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    projects: projRes.projects || prev.projects,
+                    managedProjects: projRes.managedProjects || prev.managedProjects,
+                    tasks: taskRes.tasks || prev.tasks,
+                  }
+                : prev
+            );
+          })
+          .catch(() => {});
+      } else if (nextTab === 'employee_tasks') {
+        Promise.all([
+          api.getTasks({ weekId, projectId, assigneeId: authUser.id, tab: 'employee_tasks' }),
+          api.getProjects({ scope: 'participating', tab: 'employee_tasks' }),
+        ])
+          .then(([taskRes, projRes]) => {
+            setBootstrap((prev) => {
+              if (!prev) return prev;
+              const fetchedIds = new Set((taskRes.tasks || []).map((t) => t.id));
+              const preservedOtherTasks = (prev.tasks || []).filter(
+                (t) => t.assigneeId !== authUser.id && !fetchedIds.has(t.id)
+              );
+              return {
+                ...prev,
+                projects: projRes.projects || prev.projects,
+                tasks: [...(taskRes.tasks || []), ...preservedOtherTasks],
+              };
+            });
+          })
+          .catch(() => {});
+      } else if (nextTab === 'employee_projects') {
+        api
+          .getProjects({ scope: 'participating', tab: 'employee_projects' })
+          .then((projRes) => {
+            setBootstrap((prev) =>
+              prev ? { ...prev, projects: projRes.projects || prev.projects } : prev
+            );
+          })
+          .catch(() => {});
+      } else if (nextTab === 'lark_base') {
+        api
+          .getTasks({ weekId, projectId, tab: 'lark_base' })
+          .then((taskRes) => {
+            setBootstrap((prev) =>
+              prev ? { ...prev, tasks: taskRes.tasks || prev.tasks } : prev
+            );
+          })
+          .catch(() => {});
+      } else if (nextTab === 'projects') {
+        Promise.all([
+          api.getProjects({ scope: 'managed', tab: 'projects' }),
+          api.getUsers({ tab: 'projects' }),
+        ])
+          .then(([projRes, userRes]) => {
+            setBootstrap((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    projects: projRes.projects || prev.projects,
+                    managedProjects: projRes.managedProjects || prev.managedProjects,
+                    allCompanyProjects: projRes.allCompanyProjects || prev.allCompanyProjects,
+                    users: userRes.users || prev.users,
+                  }
+                : prev
+            );
+          })
+          .catch(() => {});
+      }
+    },
+    [authUser, weekId, projectId]
+  );
 
   const handleCreateProject = async (payload) => {
     await api.createProject(payload);
@@ -391,7 +528,7 @@ export default function App() {
             {/* Strict RBAC AI Copilot Button (Only for DIRECTOR & Project PM) */}
             {permissions.canUseChatbot && (
               <button
-                onClick={() => setCopilotOpen(true)}
+                onClick={handleOpenCopilot}
                 className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-lg bg-gradient-to-r from-[#3370FF] to-[#5E47FF] text-white shadow-sm hover:opacity-95 transition"
               >
                 <Sparkles className="w-3.5 h-3.5" /> Trợ lý AI Copilot
@@ -441,7 +578,7 @@ export default function App() {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 className={`inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 whitespace-nowrap transition ${active
                   ? 'border-[#3370FF] text-[#3370FF] bg-blue-50/40'
                   : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
@@ -492,6 +629,7 @@ export default function App() {
                 onCreateTask={handleCreateTask}
                 onUpdateTask={handleUpdateTask}
                 onDeleteTask={handleDeleteTask}
+                onSyncTask={handleSyncSingleTask}
               />
             )}
 
@@ -504,10 +642,11 @@ export default function App() {
                 weeks={weeks}
                 currentUser={currentUser}
                 permissions={permissions}
+                selectedWeekId={weekId}
                 selectedProjectId={projectId}
                 onOpenProjectReview={handleOpenProjectReview}
                 onInspectEmployee={(uid) => setInspectUserId(uid)}
-                onOpenCopilotWithPrompt={() => setCopilotOpen(true)}
+                onOpenCopilotWithPrompt={handleOpenCopilot}
               />
             )}
 
@@ -524,6 +663,7 @@ export default function App() {
                 onUpdateTask={handleUpdateTask}
                 onCreateTask={handleCreateTask}
                 onDeleteTask={handleDeleteTask}
+                onSyncTask={handleSyncSingleTask}
                 onInspectEmployee={(uid) => setInspectUserId(uid)}
               />
             )}
@@ -542,6 +682,7 @@ export default function App() {
                 initialProjectId={reviewFocusProjectId}
                 onClearInitialProject={() => setReviewFocusProjectId(null)}
                 onUpdateTask={handleUpdateTask}
+                onSyncTask={handleSyncSingleTask}
                 onInspectEmployee={(uid) => setInspectUserId(uid)}
               />
             )}

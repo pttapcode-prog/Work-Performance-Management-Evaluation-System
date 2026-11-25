@@ -18,6 +18,7 @@ import {
   getTaskEvaluationWindow,
   summarizeReviewAlerts,
 } from '../utils/reviewAlertHelper.js';
+import { api } from '../api/client.js';
 
 function ProjectAlertDot({ alerts }) {
   if (!alerts || alerts.totalNeedingReview === 0) {
@@ -66,6 +67,7 @@ export default function AIAnalyticsDashboard({
   weeks = [],
   currentUser,
   permissions,
+  selectedWeekId = 'all',
   selectedProjectId = 'all',
   onOpenProjectReview,
   onInspectEmployee,
@@ -89,6 +91,22 @@ export default function AIAnalyticsDashboard({
   // Director can switch between Project List & Employee Leaderboard; PM ALWAYS sees Project List
   const [directorTableMode, setDirectorTableMode] = useState('projects'); // 'projects' | 'employees'
   const [projectFilter, setProjectFilter] = useState('all'); // 'all' | 'needs_review' | 'warning_only'
+
+  const handleDirectorModeChange = (mode) => {
+    setDirectorTableMode(mode);
+    if (mode === 'projects') {
+      api.getProjects({ scope: 'managed', filter: projectFilter, mode: 'projects' }).catch(() => {});
+    } else {
+      api
+        .getKpiSummary({ weekId: selectedWeekId, projectId: selectedProjectId, mode: 'employees' })
+        .catch(() => {});
+    }
+  };
+
+  const handleProjectFilterChange = (nextFilter) => {
+    setProjectFilter(nextFilter);
+    api.getProjects({ scope: 'managed', filter: nextFilter, action: 'filter_projects' }).catch(() => {});
+  };
 
   // Projects strictly scoped: DIRECTOR sees all company projects; PM sees ONLY projects where they are PM
   const managedProjects = useMemo(() => {
@@ -540,7 +558,7 @@ export default function AIAnalyticsDashboard({
               <div className="inline-flex rounded-xl border border-slate-200 bg-white p-0.5">
                 <button
                   type="button"
-                  onClick={() => setDirectorTableMode('projects')}
+                  onClick={() => handleDirectorModeChange('projects')}
                   className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-semibold transition ${
                     directorTableMode === 'projects'
                       ? 'bg-blue-600 text-white'
@@ -551,7 +569,7 @@ export default function AIAnalyticsDashboard({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setDirectorTableMode('employees')}
+                  onClick={() => handleDirectorModeChange('employees')}
                   className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-semibold transition ${
                     directorTableMode === 'employees'
                       ? 'bg-blue-600 text-white'
@@ -567,7 +585,7 @@ export default function AIAnalyticsDashboard({
               <div className="inline-flex rounded-xl border border-slate-200 bg-white p-0.5">
                 <button
                   type="button"
-                  onClick={() => setProjectFilter('all')}
+                  onClick={() => handleProjectFilterChange('all')}
                   className={`px-2.5 py-1 rounded-lg font-semibold transition ${
                     projectFilter === 'all' ? 'bg-blue-600 text-white' : 'text-slate-600'
                   }`}
@@ -576,7 +594,7 @@ export default function AIAnalyticsDashboard({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setProjectFilter('needs_review')}
+                  onClick={() => handleProjectFilterChange('needs_review')}
                   className={`px-2.5 py-1 rounded-lg font-semibold transition ${
                     projectFilter === 'needs_review' ? 'bg-amber-500 text-white' : 'text-slate-600'
                   }`}
@@ -585,7 +603,7 @@ export default function AIAnalyticsDashboard({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setProjectFilter('warning_only')}
+                  onClick={() => handleProjectFilterChange('warning_only')}
                   className={`px-2.5 py-1 rounded-lg font-semibold transition ${
                     projectFilter === 'warning_only' ? 'bg-rose-600 text-white' : 'text-slate-600'
                   }`}
