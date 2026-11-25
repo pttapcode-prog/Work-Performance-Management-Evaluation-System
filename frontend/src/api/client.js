@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+const API_BASE = 'https://work-performance-management-evaluation.onrender.com';
 const TOKEN_KEY = 'wpmes_auth_token';
 
 export function getAuthToken() {
