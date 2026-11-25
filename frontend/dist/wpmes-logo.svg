@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="wpmes-bg" x1="4" y1="4" x2="60" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="48%" stop-color="#1D4ED8" />
+      <stop offset="100%" stop-color="#4F46E5" />
+    </linearGradient>
+    <radialGradient id="wpmes-glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(52 12) rotate(135) scale(40)">
+      <stop offset="0%" stop-color="#22D3EE" stop-opacity="0.55" />
+      <stop offset="100%" stop-color="#22D3EE" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="wpmes-stroke" x1="12" y1="44" x2="52" y2="18" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#E0F2FE" />
+      <stop offset="55%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#67E8F9" />
+    </linearGradient>
+  </defs>
+
+  <!-- Executive Squircle Container -->
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#wpmes-bg)" />
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#wpmes-glow)" />
+  <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="15.25" stroke="white" stroke-opacity="0.18" stroke-width="1.5" />
+
+  <!-- Subtle KPI Metric Grid Accent -->
+  <line x1="13" y1="49" x2="51" y2="49" stroke="white" stroke-opacity="0.22" stroke-width="2" stroke-linecap="round" />
+
+  <!-- Geometric Rising W + Performance Evaluation Peak -->
+  <path
+    d="M12.5 23.5L20 43L29.5 27.5L36.5 41.5L49.5 18.5"
+    stroke="url(#wpmes-stroke)"
+    stroke-width="5.2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <!-- Peak Arrowhead -->
+  <path
+    d="M42.5 18.5H49.5V25.5"
+    stroke="#67E8F9"
+    stroke-width="4.2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <!-- Evaluation AI Spark -->
+  <path
+    d="M29.5 11.5L30.8 14.8L34.1 16.1L30.8 17.4L29.5 20.7L28.2 17.4L24.9 16.1L28.2 14.8L29.5 11.5Z"
+    fill="#67E8F9"
+  />
+</svg>

@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Báo Cáo Tổng Hợp Hệ Thống WPMES (Work Performance Management and Evaluation System)</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 14mm 14mm 16mm 14mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
+      color: #1e293b;
+      background: #ffffff;
+      font-size: 10.2pt;
+      line-height: 1.52;
+    }
+
+    /* Typography & Layout */
+    h1, h2, h3, h4 {
+      margin: 0;
+      color: #0f172a;
+      break-after: avoid;
+      page-break-after: avoid;
+    }
+
+    p {
+      margin: 0 0 8px 0;
+    }
+
+    ul, ol {
+      margin: 4px 0 10px 0;
+      padding-left: 18px;
+    }
+
+    li {
+      margin-bottom: 4px;
+    }
+
+    code {
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 8.8pt;
+      background: #f1f5f9;
+      color: #1e40af;
+      padding: 1px 5px;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .page-break {
+      page-break-before: always;
+      break-before: page;
+    }
+
+    .avoid-break {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    /* Cover Page */
+    .cover-page {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 258mm;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 14px;
+      padding: 26px 28px;
+      background: linear-gradient(180deg, #f8faff 0%, #ffffff 35%, #f8fafc 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cover-accent {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 8px;
+      background: linear-gradient(90deg, #1d4ed8, #3370ff, #5e47ff, #00a870);
+    }
+
+    .cover-badge {
+      display: inline-block;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      font-weight: 700;
+      font-size: 8.8pt;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 999px;
+      margin-bottom: 14px;
+    }
+
+    .cover-title {
+      font-size: 25pt;
+      font-weight: 800;
+      line-height: 1.18;
+      color: #0f172a;
+      margin-bottom: 10px;
+      letter-spacing: -0.3px;
+    }
+
+    .cover-title span {
+      color: #2563eb;
+    }
+
+    .cover-subtitle {
+      font-size: 12pt;
+      font-weight: 500;
+      color: #475569;
+      line-height: 1.48;
+      margin-bottom: 20px;
+      max-width: 95%;
+    }
+
+    .cover-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 18px 0 22px 0;
+    }
+
+    .stat-card {
+      background: #ffffff;
+      border: 1px solid #dbeafe;
+      border-radius: 10px;
+      padding: 11px 12px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    }
+
+    .stat-num {
+      font-size: 16pt;
+      font-weight: 800;
+      color: #1d4ed8;
+      line-height: 1.1;
+    }
+
+    .stat-label {
+      font-size: 8.4pt;
+      color: #475569;
+      margin-top: 4px;
+      font-weight: 600;
+    }
+
+    .meta-box {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+    }
+
+    .meta-box h3 {
+      font-size: 10pt;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #1e40af;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #f1f5f9;
+      padding-bottom: 5px;
+    }
+
+    .meta-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9.4pt;
+    }
+
+    .meta-table td {
+      padding: 4px 6px;
+      vertical-align: top;
+    }
+
+    .meta-table td:first-child {
+      width: 175px;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .toc-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 13px 16px;
+    }
+
+    .toc-box h3 {
+      font-size: 10pt;
+      color: #0f172a;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .toc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px 16px;
+      font-size: 9.2pt;
+    }
+
+    .toc-item {
+      color: #334155;
+      padding: 2px 0;
+      border-bottom: 1px dashed #e2e8f0;
+    }
+
+    .toc-item strong {
+      color: #1d4ed8;
+    }
+
+    .cover-footer {
+      border-top: 1px solid #e2e8f0;
+      padding-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 8.6pt;
+      color: #64748b;
+    }
+
+    /* Section Headings */
+    .section-header {
+      margin: 4px 0 12px 0;
+      padding: 9px 14px;
+      background: linear-gradient(90deg, #1e3a8a, #2563eb);
+      color: #ffffff;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      break-after: avoid;
+      page-break-after: avoid;
+    }
+
+    .section-header h2 {
+      color: #ffffff;
+      font-size: 13pt;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .section-tag {
+      font-size: 8.2pt;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.18);
+      padding: 3px 9px;
+      border-radius: 999px;
+      text-transform: uppercase;
+    }
+
+    .sub-heading {
+      font-size: 11.2pt;
+      font-weight: 700;
+      color: #1e3a8a;
+      margin: 14px 0 7px 0;
+      padding-left: 9px;
+      border-left: 3.5px solid #3370ff;
+      break-after: avoid;
+      page-break-after: avoid;
+    }
+
+    /* Cards & Callouts */
+    .card-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 11px;
+      margin-bottom: 12px;
+    }
+
+    .card-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .card {
+      border: 1px solid #e2e8f0;
+      border-radius: 9px;
+      padding: 11px 13px;
+      background: #ffffff;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .card-title {
+      font-size: 10pt;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-muted {
+      background: #f8fafc;
+    }
+
+    .callout {
+      border-radius: 8px;
+      padding: 10px 13px;
+      margin: 10px 0 12px 0;
+      border: 1px solid #bfdbfe;
+      background: #eff6ff;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .callout-amber {
+      border-color: #fde68a;
+      background: #fffbeb;
+    }
+
+    .callout-emerald {
+      border-color: #a7f3d0;
+      background: #ecfdf5;
+    }
+
+    .callout-title {
+      font-weight: 700;
+      font-size: 9.8pt;
+      margin-bottom: 4px;
+      color: #1e3a8a;
+    }
+
+    .callout-amber .callout-title {
+      color: #92400e;
+    }
+
+    .callout-emerald .callout-title {
+      color: #065f46;
+    }
+
+    /* Tables */
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 6px 0 12px 0;
+      font-size: 9pt;
+    }
+
+    table.data-table thead th {
+      background: #f1f5f9;
+      color: #0f172a;
+      font-weight: 700;
+      text-align: left;
+      padding: 7px 8px;
+      border: 1px solid #cbd5e1;
+      font-size: 8.8pt;
+    }
+
+    table.data-table tbody td {
+      padding: 6px 8px;
+      border: 1px solid #e2e8f0;
+      vertical-align: top;
+    }
+
+    table.data-table tbody tr:nth-child(even) {
+      background: #fafbfc;
+    }
+
+    table.data-table tr {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      font-size: 7.8pt;
+      font-weight: 700;
+      padding: 1.5px 6px;
+      border-radius: 5px;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .b-blue { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+    .b-green { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+    .b-amber { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+    .b-rose { background: #fff1f2; color: #be123c; border-color: #fecdd3; }
+    .b-purple { background: #f5f3ff; color: #6d28d9; border-color: #ddd6fe; }
+    .b-slate { background: #f1f5f9; color: #334155; border-color: #cbd5e1; }
+
+    /* Formula Box */
+    .formula-box {
+      background: #0f172a;
+      color: #f8fafc;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 9pt;
+      line-height: 1.55;
+      margin: 7px 0 11px 0;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .formula-box .hl {
+      color: #60a5fa;
+      font-weight: 700;
+    }
+
+    .formula-box .cm {
+      color: #94a3b8;
+    }
+
+    /* Module Box */
+    .module-card {
+      border: 1px solid #cbd5e1;
+      border-radius: 9px;
+      margin-bottom: 11px;
+      overflow: hidden;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .module-head {
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 7px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .module-head strong {
+      font-size: 10pt;
+      color: #0f172a;
+    }
+
+    .module-body {
+      padding: 9px 12px;
+      font-size: 9.4pt;
+    }
+
+    .diagram-wrap {
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 10px;
+      background: #fcfdff;
+      margin: 8px 0 12px 0;
+      text-align: center;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .diagram-caption {
+      font-size: 8.6pt;
+      color: #64748b;
+      font-style: italic;
+      margin-top: 5px;
+    }
+
+    .small-note {
+      font-size: 8.6pt;
+      color: #475569;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== TRANG BÌA ==================== -->
+  <section class="cover-page">
+    <div class="cover-accent"></div>
+
+    <div>
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="54" height="54" fill="none">
+          <defs>
+            <linearGradient id="rpt-bg" x1="4" y1="4" x2="60" y2="60" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#0F172A" />
+              <stop offset="48%" stop-color="#1D4ED8" />
+              <stop offset="100%" stop-color="#4F46E5" />
+            </linearGradient>
+            <linearGradient id="rpt-stroke" x1="12" y1="44" x2="52" y2="18" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#E0F2FE" />
+              <stop offset="55%" stop-color="#FFFFFF" />
+              <stop offset="100%" stop-color="#67E8F9" />
+            </linearGradient>
+          </defs>
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#rpt-bg)" />
+          <line x1="13" y1="49" x2="51" y2="49" stroke="white" stroke-opacity="0.22" stroke-width="2" stroke-linecap="round" />
+          <path d="M12.5 23.5L20 43L29.5 27.5L36.5 41.5L49.5 18.5" stroke="url(#rpt-stroke)" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M42.5 18.5H49.5V25.5" stroke="#67E8F9" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M29.5 11.5L30.8 14.8L34.1 16.1L30.8 17.4L29.5 20.7L28.2 17.4L24.9 16.1L28.2 14.8L29.5 11.5Z" fill="#67E8F9" />
+        </svg>
+        <div class="cover-badge" style="margin-bottom:0;">Tài liệu Tổng hợp Báo cáo, Ý tưởng &amp; Đặc tả Chức năng Phần mềm</div>
+      </div>
+      <h1 class="cover-title">
+        HỆ THỐNG <span>WPMES</span>
+      </h1>
+      <p class="cover-subtitle">
+        <strong>Work Performance Management and Evaluation System</strong> — Nền tảng Quản trị Công việc theo Tuần &amp; Dự án, Đánh giá KPI Đa chiều (Quality Gate) và Trợ lý AI Phân tích Hiệu suất
+      </p>
+
+      <div class="cover-grid">
+        <div class="stat-card">
+          <div class="stat-num">3 Tầng</div>
+          <div class="stat-label">Quản trị Multi-Tenant &amp; RBAC chặt chẽ</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">5.0 Est</div>
+          <div class="stat-label">Định mức khối lượng tối đa mỗi tuần/người</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">30 / 70</div>
+          <div class="stat-label">Trọng số Tự chấm &amp; PM Quality Gate</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">9 Phân hệ</div>
+          <div class="stat-label">Giao diện chuyên biệt + AI Watchdog &amp; Copilot</div>
+        </div>
+      </div>
+
+      <div class="meta-box">
+        <h3>Thông tin Tổng quan Dự án Phần mềm</h3>
+        <table class="meta-table">
+          <tr>
+            <td>Tên hệ thống:</td>
+            <td><strong>WPMES</strong> — Hệ thống Quản lý Công việc, KPI &amp; Trợ lý AI (Lark Base Model)</td>
+          </tr>
+          <tr>
+            <td>Bối cảnh &amp; Mô hình:</td>
+            <td>Mô phỏng quy trình vận hành thực tế <strong>WPMES (Trí Nam Group)</strong> trên Lark Base, định hướng Bài tập lớn / Đồ án Tốt nghiệp.</td>
+          </tr>
+          <tr>
+            <td>Kiến trúc công nghệ:</td>
+            <td>Full-stack tách biệt: <strong>Frontend</strong> (React 18, Vite 5, Tailwind CSS 3, Lucide Icons — cổng <code>5173</code>) &amp; <strong>Backend</strong> (Node.js, Express 4, MongoDB Mongoose 8 + Dual-Mode JSON Fallback — cổng <code>5000</code>).</td>
+          </tr>
+          <tr>
+            <td>Động cơ Trí tuệ Nhân tạo:</td>
+            <td><strong>Deterministic Grounded Analytics Engine</strong> (Zero-Hallucination), <strong>NLP Smart Task Parser</strong>, <strong>AI Grading Suggestion</strong> và tùy chọn tích hợp <strong>Google Gemini 2.5 Flash API</strong>.</td>
+          </tr>
+          <tr>
+            <td>Phạm vi lưu trữ dữ liệu:</td>
+            <td>5 mô hình chính: <code>Company</code>, <code>User</code>, <code>Week</code>, <code>Project</code> (kèm role <code>PM/DEV/BA/TEST</code>), <code>Task</code> (kèm minh chứng file upload &amp; lịch sử Rework).</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="toc-box">
+        <h3>Cấu trúc Nội dung Báo cáo</h3>
+        <div class="toc-grid">
+          <div class="toc-item"><strong>Phần I.</strong> Bối cảnh, Ý tưởng Cốt lõi &amp; Giải pháp Đột phá</div>
+          <div class="toc-item"><strong>Phần IV.</strong> Đặc tả Chi tiết 9 Phân hệ Chức năng Phần mềm</div>
+          <div class="toc-item"><strong>Phần II.</strong> Kiến trúc Hệ thống &amp; Thiết kế Cơ sở Dữ liệu</div>
+          <div class="toc-item"><strong>Phần V.</strong> Hệ thống Công thức Tính KPI &amp; Thuật toán AI</div>
+          <div class="toc-item"><strong>Phần III.</strong> Mô hình Quản trị 3 Tầng &amp; Ma trận Phân quyền</div>
+          <div class="toc-item"><strong>Phần VI.</strong> Danh mục REST API, Dữ liệu Mẫu &amp; Vận hành</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cover-footer">
+      <span>Dự án: WPMES (Thay_Hung Workspace)</span>
+      <span>Phiên bản Hệ thống: 1.0.0 • Chuẩn tài liệu kỹ thuật &amp; nghiệm thu</span>
+    </div>
+  </section>
+
+  <!-- ==================== PHẦN I: Ý TƯỞNG CỐT LÕI ==================== -->
+  <div class="page-break"></div>
+
+  <div class="section-header">
+    <h2>PHẦN I. BỐI CẢNH BÀI TOÁN, Ý TƯỞNG CỐT LÕI &amp; GIẢI PHÁP</h2>
+    <span class="section-tag">Core Ideas</span>
+  </div>
+
+  <h3 class="sub-heading">1.1. Bối cảnh Thực tiễn &amp; Vấn đề cần Giải quyết</h3>
+  <p>
+    Trong các doanh nghiệp công nghệ triển khai đồng thời nhiều dự án (Outsourcing, sản phẩm nội bộ, chuyển đổi số), công tác theo dõi công việc hàng tuần và đánh giá KPI nhân sự thường gặp 4 điểm nghẽn lớn:
+  </p>
+  <div class="card-grid-2">
+    <div class="card card-muted">
+      <div class="card-title"><span class="badge b-rose">Vấn đề 1</span> Phân mảnh dữ liệu &amp; Quá tải đầu tuần</div>
+      <p class="small-note">Nhân sự tham gia chéo 2–4 dự án cùng lúc nhưng không có định mức khối lượng tuần thống nhất, dẫn tới tình trạng nhận quá tải hoặc báo cáo rời rạc trên nhiều bảng tính.</p>
+    </div>
+    <div class="card card-muted">
+      <div class="card-title"><span class="badge b-amber">Vấn đề 2</span> Tự chấm điểm chủ quan &amp; Thiếu minh chứng</div>
+      <p class="small-note">Nhiều nhân viên đánh dấu hoàn thành 100% và tự chấm KPI 95–100 điểm nhưng không đính kèm sản phẩm bàn giao (link PR, file nghiệm thu, test report), gây sai lệch đánh giá.</p>
+    </div>
+    <div class="card card-muted">
+      <div class="card-title"><span class="badge b-blue">Vấn đề 3</span> PM tốn thời gian rà soát &amp; Chấm điểm thủ công</div>
+      <p class="small-note">Quản lý dự án (PM) và Ban Lãnh đạo phải đối chiếu thủ công giữa deadline, trạng thái hoàn thành, số lần sửa lại (Rework) và minh chứng để đưa ra điểm chất lượng khách quan.</p>
+    </div>
+    <div class="card card-muted">
+      <div class="card-title"><span class="badge b-purple">Vấn đề 4</span> Khó truy vết nguyên nhân trễ hạn &amp; Lệch chuẩn</div>
+      <p class="small-note">Khi trễ deadline, báo cáo truyền thống không tự phân tách được nguyên nhân khách quan (chờ khách hàng/đối tác) hay chủ quan (ước lượng kém, lỗi kỹ thuật) để xử lý kịp thời.</p>
+    </div>
+  </div>
+
+  <h3 class="sub-heading">1.2. Năm Ý tưởng Thiết kế Đột phá của WPMES</h3>
+  <p>
+    Từ mô hình quản trị thực tế <strong>WPMES (Trí Nam Group)</strong> trên Lark Base, phần mềm đề xuất và hiện thực hóa 5 ý tưởng cốt lõi xuyên suốt từ CSDL đến giao diện người dùng:
+  </p>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th style="width: 28%;">Ý tưởng Thiết kế</th>
+        <th style="width: 38%;">Cơ chế Hiện thực trong Phần mềm</th>
+        <th style="width: 34%;">Giá trị Quản trị Mang lại</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>1. Chuẩn hóa Định mức Khối lượng Tuần (Weekly Est Cap)</strong></td>
+        <td>Quy định mỗi nhân sự có hạn mức tối đa <code>5.0 Est/tuần</code> (1 Est ≈ 8 giờ). Hệ thống tự động kiểm tra tổng Est các task active (<code>validateWeeklyEstCap</code>) trước khi tạo/sửa; nếu task chuyển trạng thái <code>Hủy</code> sẽ hoàn trả hạn mức.</td>
+        <td>Ngăn ngừa quá tải, cân bằng nguồn lực đa dự án và giúp tính KPI tuần theo trọng số khối lượng thực tế.</td>
+      </tr>
+      <tr>
+        <td><strong>2. Quy trình Task 2 Phần &amp; Đánh giá Kép (Quality Gate)</strong></td>
+        <td>Tách biệt rõ <strong>Phần 1 (Kế hoạch)</strong> và <strong>Phần 2 (Thực tế, File/Link minh chứng, Tự chấm)</strong>. Điểm cuối cùng kết hợp <strong>30% Tự đánh giá</strong> + <strong>70% PM Quality Gate</strong> nhân với <strong>Hệ số Đúng hạn</strong>.</td>
+        <td>Đảm bảo tính tự giác của nhân viên nhưng vẫn giữ quyền kiểm soát chất lượng độc lập và kỷ luật tiến độ từ PM.</td>
+      </tr>
+      <tr>
+        <td><strong>3. Phân quyền Đa Công ty &amp; Tách bạch Quản trị Tài khoản</strong></td>
+        <td>Mô hình 3 tầng: <code>SYSTEM_ADMIN</code> quản lý Công ty; <code>COMPANY_ADMIN</code> chỉ quản lý tài khoản công ty mình (bị chặn <code>HTTP 403</code> khỏi task/dự án); không gian nghiệp vụ chia <code>DIRECTOR</code> / <code>MEMBER</code> cùng role dự án <code>PM/DEV/BA/TEST</code>.</td>
+        <td>Bảo mật tuyệt đối dữ liệu giữa các công ty (Multi-Tenant), tránh xung đột quyền hạn giữa nhân sự IT/HR Admin và vận hành dự án.</td>
+      </tr>
+      <tr>
+        <td><strong>4. AI Watchdog &amp; AI Gợi ý Chấm điểm Minh bạch</strong></td>
+        <td>Tự động phát hiện 4 nhóm bất thường (<code>anomalies</code>): Xong thiếu minh chứng, Trễ chưa giải trình, Lệch Tự chấm vs PM &ge; 20đ, Rework &ge; 2 lần. Đồng thời đề xuất điểm (<code>aiSuggestedScore</code>) kèm lý giải cộng/trừ từng khoản.</td>
+        <td>Giúp PM chấm điểm nhanh trong 1 chạm nhưng vẫn minh bạch, không cảm tính; tự động phát hiện điểm nóng chất lượng và trễ hạn.</td>
+      </tr>
+      <tr>
+        <td><strong>5. Grounded AI Copilot &amp; NLP Smart Task Logger</strong></td>
+        <td>AI Copilot sử dụng số liệu tính toán chính xác 100% từ DB làm nền (<em>Zero-Hallucination</em>) và tùy chọn kết nối <strong>Gemini 2.5 Flash</strong> để diễn đạt tự nhiên; Smart Parser chuyển ghi chú tiếng Việt thành danh sách task chuẩn.</td>
+        <td>Ban Lãnh đạo hỏi đáp tức thì về KPI từng người/dự án bằng tiếng Việt; giảm thao tác nhập liệu thủ công.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="diagram-wrap">
+    <svg width="100%" height="145" viewBox="0 0 760 145" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 10 5 L 0 9 z" fill="#3370FF" />
+        </marker>
+      </defs>
+      <!-- Step 1 -->
+      <rect x="8" y="18" width="132" height="106" rx="10" fill="#EFF6FF" stroke="#3370FF" stroke-width="1.5"/>
+      <text x="74" y="40" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#1E3A8A">1. Kế hoạch Tuần</text>
+      <text x="74" y="58" text-anchor="middle" font-size="9" fill="#334155">Log Task theo Dự án</text>
+      <text x="74" y="73" text-anchor="middle" font-size="9" fill="#334155">Giới hạn ≤ 5.0 Est/tuần</text>
+      <text x="74" y="88" text-anchor="middle" font-size="9" fill="#334155">Deadline &amp; Độ ưu tiên</text>
+      <rect x="28" y="98" width="92" height="18" rx="4" fill="#DBEAFE"/>
+      <text x="74" y="110" text-anchor="middle" font-size="8" font-weight="bold" fill="#1D4ED8">Phần 1: Task Plan</text>
+
+      <line x1="142" y1="71" x2="158" y2="71" stroke="#3370FF" stroke-width="1.8" marker-end="url(#arrow)"/>
+
+      <!-- Step 2 -->
+      <rect x="160" y="18" width="134" height="106" rx="10" fill="#ECFDF5" stroke="#059669" stroke-width="1.5"/>
+      <text x="227" y="40" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#065F46">2. Thực hiện &amp; Nộp</text>
+      <text x="227" y="58" text-anchor="middle" font-size="9" fill="#334155">Tích Xong / Tiến độ %</text>
+      <text x="227" y="73" text-anchor="middle" font-size="9" fill="#334155">Upload File ≤ 8MB / Link</text>
+      <text x="227" y="88" text-anchor="middle" font-size="9" fill="#334155">Tự chấm KPI &amp; Giải trình</text>
+      <rect x="176" y="98" width="102" height="18" rx="4" fill="#D1FAE5"/>
+      <text x="227" y="110" text-anchor="middle" font-size="8" font-weight="bold" fill="#047857">Phần 2: Self-Assessment</text>
+
+      <line x1="296" y1="71" x2="312" y2="71" stroke="#3370FF" stroke-width="1.8" marker-end="url(#arrow)"/>
+
+      <!-- Step 3 -->
+      <rect x="314" y="18" width="134" height="106" rx="10" fill="#F5F3FF" stroke="#7C3AED" stroke-width="1.5"/>
+      <text x="381" y="40" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#5B21B6">3. AI Pre-Check</text>
+      <text x="381" y="58" text-anchor="middle" font-size="9" fill="#334155">Bắt lỗi thiếu minh chứng</text>
+      <text x="381" y="73" text-anchor="middle" font-size="9" fill="#334155">Đo độ trễ &amp; Rework</text>
+      <text x="381" y="88" text-anchor="middle" font-size="9" fill="#334155">Gợi ý điểm (30–105đ)</text>
+      <rect x="332" y="98" width="98" height="18" rx="4" fill="#EDE9FE"/>
+      <text x="381" y="110" text-anchor="middle" font-size="8" font-weight="bold" fill="#6D28D9">AI Grading Hint</text>
+
+      <line x1="450" y1="71" x2="466" y2="71" stroke="#3370FF" stroke-width="1.8" marker-end="url(#arrow)"/>
+
+      <!-- Step 4 -->
+      <rect x="468" y="18" width="134" height="106" rx="10" fill="#FFFBEB" stroke="#D97706" stroke-width="1.5"/>
+      <text x="535" y="40" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#92400E">4. PM Quality Gate</text>
+      <text x="535" y="58" text-anchor="middle" font-size="9" fill="#334155">4 mức: Xuất sắc → Kém</text>
+      <text x="535" y="73" text-anchor="middle" font-size="9" fill="#334155">Áp dụng nhanh gợi ý AI</text>
+      <text x="535" y="88" text-anchor="middle" font-size="9" fill="#334155">Tự cộng Rework nếu lỗi</text>
+      <rect x="488" y="98" width="94" height="18" rx="4" fill="#FEF3C7"/>
+      <text x="535" y="110" text-anchor="middle" font-size="8" font-weight="bold" fill="#B45309">Trọng số 70% KPI</text>
+
+      <line x1="604" y1="71" x2="620" y2="71" stroke="#3370FF" stroke-width="1.8" marker-end="url(#arrow)"/>
+
+      <!-- Step 5 -->
+      <rect x="622" y="18" width="130" height="106" rx="10" fill="#0F172A" stroke="#0F172A" stroke-width="1.5"/>
+      <text x="687" y="40" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#FFFFFF">5. Tổng hợp AI</text>
+      <text x="687" y="58" text-anchor="middle" font-size="9" fill="#CBD5E1">Watchdog Chất lượng</text>
+      <text x="687" y="73" text-anchor="middle" font-size="9" fill="#CBD5E1">Watchdog Deadline</text>
+      <text x="687" y="88" text-anchor="middle" font-size="9" fill="#CBD5E1">Hồ sơ 360° &amp; Copilot</text>
+      <rect x="640" y="98" width="94" height="18" rx="4" fill="#2563EB"/>
+      <text x="687" y="110" text-anchor="middle" font-size="8" font-weight="bold" fill="#FFFFFF">Hạng KPI S / A / B / C</text>
+    </svg>
+    <div class="diagram-caption">Hình 1.1: Chu trình khép kín 5 bước từ Lập kế hoạch đến Giám sát Chất lượng &amp; Tổng hợp AI trong WPMES</div>
+  </div>
+
+  <!-- ==================== PHẦN II: KIẾN TRÚC & CSDL ==================== -->
+  <div class="page-break"></div>
+
+  <div class="section-header">
+    <h2>PHẦN II. KIẾN TRÚC KỸ THUẬT &amp; THIẾT KẾ CƠ SỞ DỮ LIỆU</h2>
+    <span class="section-tag">Architecture &amp; ERD</span>
+  </div>
+
+  <h3 class="sub-heading">2.1. Kiến trúc Phân tách Frontend / Backend (Decoupled MERN Stack)</h3>
+  <p>
+    Hệ thống được xây dựng theo kiến trúc Web hiện đại tách rời hoàn toàn giao diện người dùng (SPA) và máy chủ API, giúp dễ dàng bảo trì, mở rộng và triển khai độc lập:
+  </p>
+
+  <div class="diagram-wrap">
+    <svg width="100%" height="175" viewBox="0 0 760 175" xmlns="http://www.w3.org/2000/svg">
+      <!-- Frontend Box -->
+      <rect x="10" y="15" width="215" height="145" rx="10" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.6"/>
+      <rect x="10" y="15" width="215" height="28" rx="10" fill="#2563EB"/>
+      <text x="117" y="33" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#FFFFFF">FRONTEND (Port 5173)</text>
+      <text x="22" y="60" font-size="9.2" font-weight="bold" fill="#1E3A8A">React 18 + Vite 5 + Tailwind CSS</text>
+      <text x="22" y="77" font-size="8.7" fill="#334155">• 12 Components giao diện chuyên biệt</text>
+      <text x="22" y="93" font-size="8.7" fill="#334155">• API Client (frontend/src/api/client.js)</text>
+      <text x="22" y="109" font-size="8.7" fill="#334155">• Lưu JWT Bearer Token (localStorage)</text>
+      <text x="22" y="125" font-size="8.7" fill="#334155">• Upload file Base64 (DataURL ≤ 8MB)</text>
+      <text x="22" y="141" font-size="8.7" fill="#334155">• Vite Proxy /api → localhost:5000</text>
+
+      <!-- Arrow 1 -->
+      <line x1="227" y1="88" x2="265" y2="88" stroke="#1E40AF" stroke-width="2" marker-end="url(#arrow)"/>
+      <text x="246" y="79" text-anchor="middle" font-size="7.8" font-weight="bold" fill="#1E40AF">REST</text>
+      <text x="246" y="101" text-anchor="middle" font-size="7.8" fill="#475569">JSON</text>
+
+      <!-- Backend Box -->
+      <rect x="267" y="15" width="235" height="145" rx="10" fill="#ECFDF5" stroke="#059669" stroke-width="1.6"/>
+      <rect x="267" y="15" width="235" height="28" rx="10" fill="#059669"/>
+      <text x="384" y="33" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#FFFFFF">BACKEND API (Port 5000)</text>
+      <text x="279" y="60" font-size="9.2" font-weight="bold" fill="#065F46">Node.js + Express 4 (src/routes/api.js)</text>
+      <text x="279" y="77" font-size="8.7" fill="#334155">• authService: HMAC-SHA256 JWT &amp; RBAC</text>
+      <text x="279" y="93" font-size="8.7" fill="#334155">• kpiService: Enrich Task &amp; Công thức KPI</text>
+      <text x="279" y="109" font-size="8.7" fill="#334155">• aiService: Watchdog, 360°, Smart Parser</text>
+      <text x="279" y="125" font-size="8.7" fill="#334155">• Static Uploads: /uploads (JSON 15MB limit)</text>
+      <text x="279" y="141" font-size="8.7" fill="#334155">• Optional Gemini 2.5 Flash API Connector</text>
+
+      <!-- Arrow 2 -->
+      <line x1="504" y1="88" x2="542" y2="88" stroke="#1E40AF" stroke-width="2" marker-end="url(#arrow)"/>
+      <text x="523" y="79" text-anchor="middle" font-size="7.8" font-weight="bold" fill="#1E40AF">ODM</text>
+
+      <!-- Database Box -->
+      <rect x="544" y="15" width="206" height="145" rx="10" fill="#F8FAFC" stroke="#334155" stroke-width="1.6"/>
+      <rect x="544" y="15" width="206" height="28" rx="10" fill="#0F172A"/>
+      <text x="647" y="33" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#FFFFFF">DUAL-MODE STORAGE</text>
+      <text x="556" y="60" font-size="9.2" font-weight="bold" fill="#0F172A">1. MongoDB + Mongoose 8</text>
+      <text x="556" y="76" font-size="8.5" fill="#334155">   Atlas SRV / Direct Shard / Localhost</text>
+      <text x="556" y="92" font-size="8.5" fill="#334155">   5 Schemas: Company, User, Week,</text>
+      <text x="556" y="105" font-size="8.5" fill="#334155">   Project, Task</text>
+      <line x1="556" y1="115" x2="738" y2="115" stroke="#CBD5E1" stroke-dasharray="3,2"/>
+      <text x="556" y="131" font-size="9.2" font-weight="bold" fill="#B45309">2. Fallback JSON Store</text>
+      <text x="556" y="146" font-size="8.5" fill="#334155">   Tự động lưu backend/src/db/data.json</text>
+    </svg>
+    <div class="diagram-caption">Hình 2.1: Kiến trúc phân tách 3 tầng &amp; Cơ chế lưu trữ Dual-Mode (MongoDB + Fallback JSON Store)</div>
+  </div>
+
+  <div class="callout callout-emerald">
+    <div class="callout-title">Cơ chế Dual-Mode Database &amp; Độ tin cậy Vận hành (backend/src/db/database.js)</div>
+    <p class="small-note" style="margin-bottom:0;">
+      Hệ thống hỗ trợ kết nối MongoDB (cả MongoDB Local và MongoDB Atlas với tự động cấu hình DNS <code>8.8.8.8 / 1.1.1.1</code> và Direct Atlas Shard URI fallback khi mạng nội bộ chặn SRV). Nếu dịch vụ MongoDB chưa khởi chạy hoặc mất kết nối, Backend tự động chuyển sang chế độ <strong>Fallback JSON Store</strong> tại <code>backend/src/db/data.json</code> cùng dữ liệu mẫu khởi tạo sẵn từ <code>seedData.js</code>, đảm bảo phần mềm vận hành liên tục không gián đoạn.
+    </p>
+  </div>
+
+  <h3 class="sub-heading">2.2. Thiết kế Cơ sở Dữ liệu (5 Collection / Mongoose Schemas)</h3>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th style="width: 17%;">Collection / Model</th>
+        <th style="width: 23%;">Khóa &amp; Liên kết</th>
+        <th style="width: 60%;">Các trường dữ liệu &amp; Vai trò nghiệp vụ</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Companies</strong><br/><code>Company.js</code></td>
+        <td>PK: <code>id</code> (VD: <code>CMP-TRINAM</code>)</td>
+        <td>Lưu thông tin doanh nghiệp trong mô hình Multi-Tenant: <code>name</code>, <code>code</code>, <code>domain</code>, <code>industry</code>, <code>plan</code>, <code>color</code>, <code>logoText</code>.</td>
+      </tr>
+      <tr>
+        <td><strong>Users</strong><br/><code>User.js</code></td>
+        <td>PK: <code>id</code><br/>FK: <code>companyId</code><br/>Unique: <code>email</code></td>
+        <td>Lưu tài khoản đăng nhập: <code>name</code>, <code>email</code>, <code>password</code>, <code>role</code> (<code>SYSTEM_ADMIN</code> | <code>COMPANY_ADMIN</code> | <code>DIRECTOR</code> | <code>MEMBER</code>), <code>title</code>, <code>department</code>, <code>avatar</code>, <code>color</code>, <code>status</code> (<code>active</code> | <code>inactive</code>).</td>
+      </tr>
+      <tr>
+        <td><strong>Weeks</strong><br/><code>Week.js</code></td>
+        <td>PK: <code>id</code> (VD: <code>2026-W47</code>)</td>
+        <td>Quản lý chu kỳ tuần làm việc: <code>label</code>, <code>startDate</code>, <code>endDate</code>, <code>isCurrent</code>, <code>status</code> (<code>open</code> | <code>closed</code>).</td>
+      </tr>
+      <tr>
+        <td><strong>Projects</strong><br/><code>Project.js</code></td>
+        <td>PK: <code>id</code><br/>FK: <code>companyId</code>, <code>pmId</code></td>
+        <td>Lưu dự án theo công ty: <code>code</code>, <code>name</code>, <code>client</code>, <code>status</code>, <code>color</code>, <code>description</code>, và mảng nhúng <code>members: [{ userId, projectRole }]</code> với 4 vai trò dự án: <code>PM</code>, <code>DEV</code>, <code>BA</code>, <code>TEST</code>.</td>
+      </tr>
+      <tr>
+        <td><strong>Tasks</strong><br/><code>Task.js</code></td>
+        <td>PK: <code>id</code><br/>FK: <code>companyId</code>, <code>weekId</code>, <code>projectId</code>, <code>assigneeId</code></td>
+        <td>
+          Bảng trung tâm gồm <strong>6 nhóm trường</strong>:<br/>
+          1) <em>Định danh &amp; Dự án</em>; 2) <em>Kế hoạch (Phần 1)</em>: <code>title</code>, <code>description</code>, <code>category</code>, <code>priority</code>, <code>startDate</code>, <code>endDate</code>, <code>deadline</code>, <code>estimatedVolume</code> (0–5), <code>estimatedHours</code>, <code>actualHours</code>;<br/>
+          3) <em>Thực tế &amp; Minh chứng (Phần 2)</em>: <code>completedAt</code>, <code>isDone</code>, <code>attachments[]</code>, <code>deliverableUrl</code>, <code>hasEvidence</code>, <code>status</code> (<code>pending_review | completed | cancelled</code>);<br/>
+          4) <em>Tự đánh giá</em>: <code>selfProgress</code>, <code>selfKpiRating</code>, <code>selfScore</code>, <code>selfNote</code>, <code>selfSubmittedAt</code>;<br/>
+          5) <em>PM đánh giá</em>: <code>pmQualityRating</code>, <code>pmQualityScore</code>, <code>pmFeedback</code>, <code>pmReviewerId/Name</code>, <code>reworkCount</code>;<br/>
+          6) <em>KPI &amp; AI tổng hợp</em>: <code>deadlineStatus</code>, <code>daysLate</code>, <code>deadlineFactor</code>, <code>finalKpiScore</code>, <code>ratingGap</code>, <code>anomalies[]</code>, <code>aiSuggestedScore</code>, <code>aiSuggestedRating</code>, <code>aiGradingHint</code>.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ==================== PHẦN III: PHÂN CẤP & RBAC ==================== -->
+  <div class="page-break"></div>
+
+  <div class="section-header">
+    <h2>PHẦN III. MÔ HÌNH QUẢN TRỊ 3 TẦNG &amp; MA TRẬN PHÂN QUYỀN (RBAC)</h2>
+    <span class="section-tag">Security &amp; RBAC</span>
+  </div>
+
+  <h3 class="sub-heading">3.1. Cơ chế Xác thực &amp; Kiến trúc Phân quyền 3 Tầng</h3>
+  <p>
+    Mỗi phiên đăng nhập được cấp một chuỗi <strong>Bearer Token (JWT ký HMAC-SHA256, thời hạn 7 ngày)</strong> tại <code>POST /api/auth/login</code>. Mỗi tài khoản giữ <strong>duy nhất 1 vai trò cấp hệ thống/công ty</strong>, không cho phép chuyển vai trò nóng trên thanh điều hướng. Hệ thống kiểm soát quyền ở cả giao diện (React) và API (Express middleware) qua 3 tầng tách biệt:
+  </p>
+
+  <div class="card-grid-3">
+    <div class="card" style="border-top: 4px solid #0f172a;">
+      <div class="card-title"><span class="badge b-slate">Tầng 1</span> SYSTEM_ADMIN</div>
+      <p class="small-note"><strong>Quản trị Toàn nền tảng</strong> (<code>SystemAdminView</code>):</p>
+      <ul class="small-note" style="margin-bottom:0;">
+        <li>Tạo, cập nhật, xóa Công ty (<code>CMP-*</code>).</li>
+        <li>Cấp, khóa/mở, đổi mật khẩu, xóa tài khoản <code>COMPANY_ADMIN</code>.</li>
+        <li>Không truy cập workspace nghiệp vụ công ty.</li>
+      </ul>
+    </div>
+
+    <div class="card" style="border-top: 4px solid #4338ca;">
+      <div class="card-title"><span class="badge b-purple">Tầng 2</span> COMPANY_ADMIN</div>
+      <p class="small-note"><strong>Quản trị Tài khoản Công ty</strong> (<code>CompanyAdminView</code>):</p>
+      <ul class="small-note" style="margin-bottom:0;">
+        <li>Chỉ quản lý nhân sự thuộc công ty mình.</li>
+        <li>Chỉ cấp 2 role nghiệp vụ: <code>DIRECTOR</code> hoặc <code>MEMBER</code>.</li>
+        <li><strong>Chặn tuyệt đối (HTTP 403)</strong> khỏi Dự án, Task và AI.</li>
+      </ul>
+    </div>
+
+    <div class="card" style="border-top: 4px solid #2563eb;">
+      <div class="card-title"><span class="badge b-blue">Tầng 3</span> WORKSPACE NGHIỆP VỤ</div>
+      <p class="small-note"><strong>Vận hành Công việc &amp; Dự án</strong>:</p>
+      <ul class="small-note" style="margin-bottom:0;">
+        <li><strong>DIRECTOR</strong>: Toàn quyền dự án, chỉ định PM, xem mọi task, chấm KPI &amp; dùng AI.</li>
+        <li><strong>MEMBER</strong>: Chia role riêng trong từng dự án (<code>PM</code>, <code>DEV</code>, <code>BA</code>, <code>TEST</code>).</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 class="sub-heading">3.2. Ma trận Phân quyền Chi tiết (RBAC Matrix — Backend <code>authService.js</code> &amp; <code>api.js</code>)</h3>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th style="width: 31%;">Chức năng / Endpoint Nghiệp vụ</th>
+        <th style="text-align:center; width: 13%;">SYSTEM<br/>ADMIN</th>
+        <th style="text-align:center; width: 13%;">COMPANY<br/>ADMIN</th>
+        <th style="text-align:center; width: 14%;">DIRECTOR<br/>(Lãnh đạo)</th>
+        <th style="text-align:center; width: 15%;">MEMBER<br/>(Role PM dự án)</th>
+        <th style="text-align:center; width: 14%;">MEMBER<br/>(DEV/BA/TEST)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Quản lý Công ty &amp; Tài khoản Admin Công ty (<code>/api/system/*</code>)</td>
+        <td style="text-align:center;"><span class="badge b-green">Toàn quyền</span></td>
+        <td style="text-align:center;"><span class="badge b-rose">403 Chặn</span></td>
+        <td style="text-align:center;"><span class="badge b-rose">403 Chặn</span></td>
+        <td style="text-align:center;"><span class="badge b-rose">403 Chặn</span></td>
+        <td style="text-align:center;"><span class="badge b-rose">403 Chặn</span></td>
+      </tr>
+      <tr>
+        <td>Quản lý Tài khoản Nhân sự Công ty (<code>/api/company-admin/*</code>, <code>/api/users</code>)</td>
+        <td style="text-align:center;"><span class="badge b-rose">403 Chặn</span></td>
+        <td style="text-align:center;"><span class="badge b-green">Trong cty mình</span></td>
+        <td style="text-align:center;"><span class="badge b-rose">403 Chặn</span></td>
+        <td style="text-align:center;"><span class="badge b-rose">403 Chặn</span></td>
+        <td style="text-align:center;"><span class="badge b-rose">403 Chặn</span></td>
+      </tr>
+      <tr>
+        <td>Tạo / Xóa Dự án &amp; Chỉ định / Thay đổi PM (<code>POST/DELETE /api/projects</code>)</td>
+        <td style="text-align:center;"><span class="badge b-rose">403 Chặn</span></td>
+        <td style="text-align:center;"><span class="badge b-rose">403 Chặn</span></td>
+        <td style="text-align:center;"><span class="badge b-green">Toàn quyền</span></td>
+        <td style="text-align:center;"><span class="badge b-rose">403 Chặn</span></td>
+        <td style="text-align:center;"><span class="badge b-rose">403 Chặn</span></td>
+      </tr>
+      <tr>
+        <td>Thêm / Sửa Thành viên DEV, BA, TEST trong Dự án (<code>PATCH /api/projects/:id/members</code>)</td>
+        <td style="text-align:center;"><span class="badge b-rose">403 Chặn</span></td>
+        <td style="text-align:center;"><span class="badge b-rose">403 Chặn</span></td>
+        <td style="text-align:center;"><span class="badge b-green">Mọi dự án</span></td>
+        <td style="text-align:center;"><span class="badge b-blue">Dự án làm PM</span></td>
+        <td style="text-align:center;"><span class="badge b-slate">Chỉ xem</span></td>
+      </tr>
+      <tr>
+        <td>Xem danh sách Task &amp; Bảng Lark Base</td>
+        <td style="text-align:center;"><span class="badge b-rose">403 Chặn</span></td>
+        <td style="text-align:center;"><span class="badge b-rose">403 Chặn</span></td>
+        <td style="text-align:center;"><span class="badge b-green">Toàn công ty</span></td>
+        <td style="text-align:center;"><span class="badge b-blue">Dự án PM + Cá nhân</span></td>
+        <td style="text-align:center;"><span class="badge b-amber">Chỉ Task của mình</span></td>
+      </tr>
+      <tr>
+        <td>Log Task cá nhân, Upload Minh chứng &amp; Tự đánh giá KPI</td>
+        <td style="text-align:center;"><span class="badge b-rose">403 Chặn</span></td>
+        <td style="text-align:center;"><span class="badge b-rose">403 Chặn</span></td>
+        <td style="text-align:center;"><span class="badge b-green">Có</span></td>
+        <td style="text-align:center;"><span class="badge b-green">Có</span></td>
+        <td style="text-align:center;"><span class="badge b-green">Task cá nhân</span></td>
+      </tr>
+      <tr>
+        <td>Chấm Chất lượng (Quality Gate), Điểm PM &amp; Nhận xét</td>
+        <td style="text-align:center;"><span class="badge b-rose">403 Chặn</span></td>
+        <td style="text-align:center;"><span class="badge b-rose">403 Chặn</span></td>
+        <td style="text-align:center;"><span class="badge b-green">Mọi dự án</span></td>
+        <td style="text-align:center;"><span class="badge b-blue">Dự án làm PM</span></td>
+        <td style="text-align:center;"><span class="badge b-rose">403 Chặn</span></td>
+      </tr>
+      <tr>
+        <td>AI Dashboard Watchdog, Hồ sơ 360° &amp; AI Copilot Chatbot</td>
+        <td style="text-align:center;"><span class="badge b-rose">403 Chặn</span></td>
+        <td style="text-align:center;"><span class="badge b-rose">403 Chặn</span></td>
+        <td style="text-align:center;"><span class="badge b-green">Toàn công ty</span></td>
+        <td style="text-align:center;"><span class="badge b-blue">Phạm vi dự án PM</span></td>
+        <td style="text-align:center;"><span class="badge b-rose">Ẩn UI + 403</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <div class="callout-title">Quy tắc Cô lập Dữ liệu Theo Công ty (Strict Tenant Scoping)</div>
+    <p class="small-note" style="margin-bottom:0;">
+      Mọi truy vấn nghiệp vụ đều đi qua hàm <code>scopeStateToCompany(fullState, companyId)</code> và xác thực dự án tham gia <code>isProjectMember(project, actor)</code>. Nhân sự của <strong>Trí Nam Group</strong> không thể xem hoặc tác động vào dữ liệu của <strong>VietCloud Digital Corp</strong>. Ngoài ra, Project PM được phép thêm/gỡ nhân sự <code>DEV / BA / TEST</code> nhưng <strong>không thể thay đổi hoặc tước quyền PM</strong> (chỉ <code>DIRECTOR</code> được chỉ định PM).
+    </p>
+  </div>
+
+  <!-- ==================== PHẦN IV: ĐẶC TẢ 9 PHÂN HỆ ==================== -->
+  <div class="page-break"></div>
+
+  <div class="section-header">
+    <h2>PHẦN IV. ĐẶC TẢ CHI TIẾT CÁC CHỨC NĂNG PHẦN MỀM</h2>
+    <span class="section-tag">9 Functional Modules</span>
+  </div>
+
+  <p>
+    Giao diện Frontend (<code>frontend/src/components/</code>) được thiết kế theo phong cách trực quan của Lark Base, tự động điều hướng màn hình làm việc phù hợp ngay sau khi đăng nhập dựa trên quyền thực tế của tài khoản:
+  </p>
+
+  <div class="module-card">
+    <div class="module-head">
+      <strong>1. Xác thực Đăng nhập &amp; Điều hướng Theo Vai trò (<code>LoginView.jsx</code> &amp; <code>App.jsx</code>)</strong>
+      <span class="badge b-slate">Cổng truy cập</span>
+    </div>
+    <div class="module-body">
+      <ul>
+        <li>Đăng nhập thực tế bằng <strong>Email &amp; Mật khẩu</strong> (<code>POST /api/auth/login</code>), kiểm tra trạng thái hoạt động (<code>active/inactive</code>) và cấp token JWT.</li>
+        <li>Tích hợp bảng <strong>Tài khoản Demo phân nhóm theo Công ty &amp; Tầng quản trị</strong> (<code>GET /api/auth/demo-accounts</code>) và nút <strong>Khôi phục dữ liệu mẫu</strong> (<code>POST /api/admin/reset-seed</code>) phục vụ kiểm thử nhanh.</li>
+        <li>Hiển thị trạng thái kết nối CSDL (<em>MongoDB Connected</em> hoặc <em>MongoDB Schema Fallback</em>), bộ lọc Tuần &amp; Dự án toàn cục và huy hiệu vai trò cố định của người dùng.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-head">
+      <strong>2. Cổng Quản trị Hệ thống Đa Công ty (<code>SystemAdminView.jsx</code>)</strong>
+      <span class="badge b-slate">SYSTEM_ADMIN</span>
+    </div>
+    <div class="module-body">
+      <ul>
+        <li>Bảng thống kê tổng quan toàn nền tảng: Tổng số Công ty, Admin Công ty, Tài khoản nhân sự, Dự án và Công việc.</li>
+        <li><strong>Quản lý Công ty</strong>: Tạo mới công ty (Tên, Mã, Domain, Ngành nghề, Màu nhận diện) kèm khởi tạo đồng thời tài khoản <code>COMPANY_ADMIN</code> đầu tiên; chỉnh sửa hoặc xóa công ty.</li>
+        <li><strong>Quản lý Admin Công ty</strong>: Tạo mới tài khoản <code>COMPANY_ADMIN</code> cho từng doanh nghiệp, khóa/mở khóa trạng thái truy cập, đặt lại mật khẩu và xóa tài khoản.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-head">
+      <strong>3. Cổng Quản trị Tài khoản Nội bộ Công ty (<code>CompanyAdminView.jsx</code>)</strong>
+      <span class="badge b-purple">COMPANY_ADMIN</span>
+    </div>
+    <div class="module-body">
+      <ul>
+        <li>Chỉ hiển thị và cho phép thao tác trên danh sách nhân sự thuộc phạm vi công ty của Admin đó; tách biệt hoàn toàn khỏi chức năng quản lý Dự án hay Task.</li>
+        <li>Tạo mới tài khoản với 2 vai trò hợp lệ cấp công ty: <strong>Lãnh đạo (<code>DIRECTOR</code>)</strong> hoặc <strong>Nhân viên (<code>MEMBER</code>)</strong>, tự động gắn <code>companyId</code>.</li>
+        <li>Hỗ trợ đổi vai trò (<code>DIRECTOR &lt;-&gt; MEMBER</code>), kích hoạt/khóa tài khoản, đặt lại mật khẩu và xóa tài khoản (chặn tự xóa tài khoản đang đăng nhập).</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-head">
+      <strong>4. Quản lý Dự án, Phân công Nhân sự &amp; Chế độ Xem Dự án (<code>ProjectManagementView.jsx</code> &amp; <code>EmployeeProjectsView.jsx</code>)</strong>
+      <span class="badge b-blue">DIRECTOR / PM / MEMBER</span>
+    </div>
+    <div class="module-body">
+      <ul>
+        <li><strong>Đối với Lãnh đạo (<code>DIRECTOR</code>)</strong>: Tạo dự án mới (Tên, Mã, Khách hàng, Mô tả, Màu), chỉ định <strong>PM</strong> và thành viên ban đầu; xóa dự án; chỉnh sửa thành viên ở mọi dự án.</li>
+        <li><strong>Đối với Nhân sự giữ role <code>PM</code></strong>: Xem các dự án mình làm PM, thêm/bớt nhân viên công ty vào dự án và phân chia vai trò <code>DEV</code>, <code>BA</code>, <code>TEST</code>.</li>
+        <li><strong>Đối với Nhân viên (<code>EmployeeProjectsView</code>)</strong>: Xem danh sách dự án mình tham gia ở chế độ chỉ đọc, biết rõ vai trò cá nhân, PM phụ trách, số nhân sự và thống kê tiến độ task cá nhân trong từng dự án.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-head">
+      <strong>5. Quản lý Công việc Cá nhân 2 Phần &amp; Tự đánh giá KPI (<code>EmployeeTaskView.jsx</code>)</strong>
+      <span class="badge b-green">MEMBER (DEV/BA/TEST)</span>
+    </div>
+    <div class="module-body">
+      <ul>
+        <li><strong>Thanh kiểm soát Định mức Tuần</strong>: Hiển thị trực quan tiến độ <code>Est đã dùng / 5.0 Est</code> và phần còn lại trong tuần đang chọn; tự động cảnh báo và chặn khi thêm hoặc sửa vượt quá <code>5.0 Est</code>.</li>
+        <li><strong>Phần 1 — Kế hoạch Công việc</strong>: Nhập Tên công việc, chọn Dự án tham gia, Phân loại (<code>Feature/Backend/Frontend/QA/BA</code>), Độ ưu tiên (<code>high/medium/low</code>), Ngày bắt đầu, Ngày kết thúc/Deadline, Khối lượng Est (<code>0.5 → 5.0</code>) và Giờ ước tính.</li>
+        <li><strong>Phần 2 — Thực tế Hoàn thành, Minh chứng &amp; Tự chấm KPI</strong>: Tích chọn <strong>"Xong"</strong> (tự đồng bộ ngày hoàn thành và tiến độ 100%), đính kèm file minh chứng thực tế từ máy tính (<code>POST /api/upload</code>, giới hạn <strong>8MB/file</strong>, lưu tại <code>backend/uploads</code>) hoặc nhập link PR/Tài liệu, chọn Trạng thái (<code>Chờ đánh giá</code> / <code>Đã hoàn thành</code> / <code>Hủy</code>), chọn mức tự đánh giá &amp; điểm tự chấm (0–120), và ghi chú giải trình nguyên nhân nếu trễ hạn.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <div class="module-card">
+    <div class="module-head">
+      <strong>6. Bảng Tổng hợp Lark Base, Kanban Board &amp; AI Smart Task Logger (<code>LarkBaseView.jsx</code> &amp; <code>SelfAssessmentView.jsx</code>)</strong>
+      <span class="badge b-blue">DIRECTOR &amp; PM</span>
+    </div>
+    <div class="module-body">
+      <ul>
+        <li><strong>Hai chế độ hiển thị trực quan</strong>: <strong>Bảng Lark Base (Grid View)</strong> hỗ trợ phân nhóm động theo <em>Dự án, Nhân sự, Trạng thái, Đánh giá Chất lượng hoặc Không nhóm</em>; và chế độ <strong>Kanban Board</strong> theo cột trạng thái.</li>
+        <li><strong>Bộ lọc nhanh (Quick Filter Pills)</strong>: Lọc tức thì <em>Tất cả</em>, <em>Chưa đạt chất lượng / Rework</em>, <em>Trễ / Quá hạn</em>, <em>Lệch điểm &ge; 20đ</em> và <em>Chờ PM chấm</em>, kết hợp thanh tìm kiếm toàn văn.</li>
+        <li><strong>Chỉnh sửa trực tiếp &amp; Tạo nhanh</strong>: Cho phép cập nhật trạng thái, checkbox hoàn thành, điểm tự chấm, điểm PM và minh chứng ngay trên dòng dữ liệu hoặc qua modal tạo dòng Task mới.</li>
+        <li><strong>AI Smart Task Logger (<code>SelfAssessmentView.jsx</code> &amp; <code>/api/ai/parse-tasks</code>)</strong>: Thành phần mở rộng cho phép nhập đoạn mô tả tự nhiên bằng tiếng Việt (VD: <em>"Hoàn thiện API xuất báo cáo dự án WPMES hết 8h deadline thứ 6; kiểm tra mobile dự án TN-SmartGov 6h hạn 2026-11-21"</em>) để AI bóc tách thành danh sách bản nháp Task có cấu trúc và lưu hàng loạt qua <code>POST /api/tasks/bulk</code>.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-head">
+      <strong>7. Kiểm soát Chất lượng &amp; Chấm điểm KPI — Quality Gate (<code>PMQualityReviewView.jsx</code>)</strong>
+      <span class="badge b-amber">DIRECTOR &amp; PM</span>
+    </div>
+    <div class="module-body">
+      <ul>
+        <li>Chọn từng nhân sự ở danh sách bên trái để rà soát toàn bộ công việc theo Tuần/Dự án, xem tỷ lệ hoàn thành, điểm KPI hiện tại và KPI tuần do AI khuyến nghị.</li>
+        <li><strong>Hộp Cảnh báo Bất thường Tự động (<code>anomalies</code>)</strong>: Gắn cờ đỏ ngay trên đầu việc nếu thiếu minh chứng, trễ hạn chưa giải trình, lệch điểm tự chấm &ge; 20đ hoặc Rework &ge; 2 lần.</li>
+        <li><strong>Hộp AI Gợi ý Chấm điểm 1 Chạm</strong>: Hiển thị điểm số gợi ý (<code>aiSuggestedScore</code>), mức xếp loại gợi ý và lý do từng khoản cộng/trừ (<code>aiGradingHint</code>) kèm nút <strong>"Áp dụng gợi ý AI"</strong> để điền nhanh vào form chấm.</li>
+        <li><strong>Nghiệm thu độc lập</strong>: PM chọn 4 mức chất lượng (<code>Xuất sắc</code>, <code>Đạt chuẩn</code>, <code>Cần sửa lại - Rework</code>, <code>Chưa đạt chất lượng</code>), chỉnh điểm (0–120) và viết nhận xét chi tiết. Khi chuyển sang <code>rework</code> hoặc <code>poor</code>, hệ thống tự tăng bộ đếm <code>reworkCount</code>.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-head">
+      <strong>8. Trung tâm Phân tích AI Watchdog &amp; Hồ sơ Nhân sự 360° (<code>AIAnalyticsDashboard.jsx</code> &amp; <code>EmployeeDetailModal.jsx</code>)</strong>
+      <span class="badge b-purple">AI Watchdog</span>
+    </div>
+    <div class="module-body">
+      <ul>
+        <li><strong>4 Thẻ Chỉ số Điều hành</strong>: KPI Trung bình Tuần, Số nhân sự chưa đạt chất lượng, Số nhân sự chậm deadline và Số đầu việc lệch điểm Tự chấm vs PM (&ge; 20đ).</li>
+        <li><strong>Bản tin AI Tổng hợp Điều hành Tuần</strong>: Tóm tắt tự động tỷ lệ hoàn thành, tỷ lệ đúng hạn, tỷ lệ đạt chuẩn PM, cảnh báo nhân sự vi phạm và vinh danh cá nhân dẫn đầu.</li>
+        <li><strong>Watchdog 1 — Ai chưa đạt chất lượng</strong>: Liệt kê chi tiết nhân sự, đầu việc lỗi, tổng hợp nhận xét từ PM (<code>aiRootCause</code>) và sinh <strong>Khuyến nghị khắc phục cụ thể</strong> (<code>aiRecommendation</code>: kiểm tra Responsive mobile, Tech Lead review query/index, bổ sung test case ngoại lệ, bắt buộc gắn link PR...).</li>
+        <li><strong>Watchdog 2 — Ai chậm deadline</strong>: Liệt kê số task trễ, số ngày trễ tối đa, trích xuất giải trình cá nhân và <strong>Phân loại nguyên nhân tự động</strong> (<em>Khách quan</em>, <em>Chủ quan</em>, <em>Hỗn hợp</em>, <em>Cần làm rõ</em> hoặc <em>Chưa có giải trình</em>).</li>
+        <li><strong>Bảng Xếp hạng KPI &amp; Hồ sơ 360° (<code>EmployeeDetailModal</code>)</strong>: Xếp hạng toàn đội ngũ (S/A/B/C), đối chiếu KPI thực tế và KPI AI đề xuất; bấm vào từng nhân sự để mở Hồ sơ 360° xem tỷ trọng đóng góp theo dự án, <em>Điểm mạnh</em>, <em>Rủi ro</em> và <em>Hành động tiếp theo</em>.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-head">
+      <strong>9. Trợ lý Ảo Điều hành AI Copilot (<code>AICopilotDrawer.jsx</code>)</strong>
+      <span class="badge b-blue">Chatbot AI</span>
+    </div>
+    <div class="module-body">
+      <ul>
+        <li>Ngăn kéo hội thoại trượt bên phải dành riêng cho <code>DIRECTOR</code> và <code>PM</code> dự án, cung cấp sẵn các gợi ý truy vấn nhanh (<em>Quick Prompts</em>).</li>
+        <li>Hỗ trợ hỏi đáp tự nhiên tiếng Việt về: <strong>Nhân sự chưa đạt chất lượng</strong>, <strong>Nhân sự chậm deadline</strong>, <strong>Cảnh báo lệch điểm tự chấm</strong>, <strong>Hiệu suất theo Dự án</strong>, hoặc <strong>Chi tiết 360° của bất kỳ nhân viên nào</strong> (kèm nút mở thẳng modal hồ sơ nhân sự đó).</li>
+        <li><strong>Kiến trúc Grounded Hybrid</strong>: Tầng phân tích nội bộ truy xuất số liệu thực tế 100% từ DB trước; nếu người dùng cấu hình <code>GEMINI_API_KEY</code> (qua biến môi trường hoặc phần cài đặt trên Drawer), hệ thống gọi <code>gemini-2.5-flash</code> để diễn đạt câu trả lời tự nhiên nhưng cam kết bám sát số liệu gốc.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ==================== PHẦN V: CÔNG THỨC KPI & THUẬT TOÁN AI ==================== -->
+  <div class="page-break"></div>
+
+  <div class="section-header">
+    <h2>PHẦN V. HỆ THỐNG CÔNG THỨC TÍNH KPI &amp; THUẬT TOÁN AI</h2>
+    <span class="section-tag">Formula &amp; AI Logic</span>
+  </div>
+
+  <h3 class="sub-heading">5.1. Quy tắc Đánh giá Tiến độ &amp; Hệ số Kỷ luật Deadline (<code>kpiService.js</code>)</h3>
+  <p>Mỗi công việc khi truy xuất đều được hàm <code>enrichTask(task, referenceDate, maps)</code> chuẩn hóa trạng thái thời hạn và tính điểm động:</p>
+  <ul>
+    <li><strong>Trạng thái Deadline (<code>deadlineStatus</code>)</strong>:
+      <ul>
+        <li>Nếu <code>status === 'cancelled'</code> &rarr; <code>cancelled</code> (không tính khối lượng Est tuần và không tính KPI).</li>
+        <li>Nếu đã hoàn thành (<code>isDone === true</code> hoặc <code>status === 'completed'</code>): so sánh <code>completedAt || referenceDate</code> với <code>deadline</code>. Nếu trễ &gt; 0 ngày &rarr; <code>late_done</code>, ngược lại &rarr; <code>on_time</code>.</li>
+        <li>Nếu chưa hoàn thành: so sánh <code>referenceDate</code> với <code>deadline</code>. Nếu quá hạn &gt; 0 ngày &rarr; <code>overdue</code>; nếu còn &le; 1 ngày &rarr; <code>due_soon</code>; ngược lại &rarr; <code>on_time</code>.</li>
+      </ul>
+    </li>
+    <li><strong>Xác định Chưa đạt chất lượng (<code>isLowQuality</code>)</strong>: Task bị gắn cờ nếu không hủy và có <code>pmQualityRating</code> là <code>poor</code> / <code>rework</code> hoặc <code>pmQualityScore &lt; 75</code>.</li>
+    <li><strong>Độ lệch đánh giá (<code>ratingGap</code>)</strong>: <code>selfScore - pmQualityScore</code>; cảnh báo bất thường (<code>hasSignificantGap</code>) khi <code>ratingGap &ge; 20</code> điểm.</li>
+  </ul>
+
+  <div class="formula-box">
+    <span class="cm">// 1. Hệ số đúng hạn (Phạt 5% mỗi ngày trễ, sàn tối thiểu 0.60)</span><br/>
+    <span class="hl">deadlineFactor</span> = isLate ? max(0.60, 1.0 - daysLate * 0.05) : 1.0<br/><br/>
+    <span class="cm">// 2. Điểm chất lượng hiệu dụng (Ưu tiên điểm PM chấm; nếu chưa chấm lấy tạm selfScore)</span><br/>
+    <span class="hl">effectiveQualityScore</span> = (pmQualityScore !== null) ? pmQualityScore : (selfScore || 0)<br/><br/>
+    <span class="cm">// 3. Điểm KPI cuối cùng của từng Task (Trọng số: 30% Tự chấm + 70% Chất lượng PM)</span><br/>
+    <span class="hl">finalKpiScore</span> = isCancelled ? 0 : round((0.3 * selfScore + 0.7 * effectiveQualityScore) * deadlineFactor)<br/><br/>
+    <span class="cm">// 4. Điểm KPI Tuần của Nhân sự (Trung bình có trọng số theo Khối lượng Est, tối thiểu 0.5)</span><br/>
+    <span class="hl">finalWeekKpi</span> = round( Σ(finalKpiScore_i * max(0.5, estimatedVolume_i)) / Σ max(0.5, estimatedVolume_i) )
+  </div>
+
+  <h3 class="sub-heading">5.2. Bảng Quy đổi Hạng KPI &amp; Các Mức Đánh giá Chất lượng</h3>
+  <div class="card-grid-2">
+    <div class="card">
+      <div class="card-title">Xếp hạng KPI Tuần (<code>computeKpiGrade</code>)</div>
+      <table class="data-table" style="margin-bottom:0;">
+        <thead>
+          <tr><th>Hạng</th><th>Khoảng điểm</th><th>Ý nghĩa xếp loại</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="badge b-green">Hạng S</span></td><td>&ge; 95 điểm</td><td>Xuất sắc</td></tr>
+          <tr><td><span class="badge b-blue">Hạng A</span></td><td>85 – 94 điểm</td><td>Tốt / Đạt chuẩn</td></tr>
+          <tr><td><span class="badge b-amber">Hạng B</span></td><td>70 – 84 điểm</td><td>Trung bình / Cần cải thiện</td></tr>
+          <tr><td><span class="badge b-rose">Hạng C</span></td><td>&lt; 70 điểm</td><td>Chưa đạt KPI</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Thang Đánh giá Chất lượng PM (Quality Gate)</div>
+      <table class="data-table" style="margin-bottom:0;">
+        <thead>
+          <tr><th>Mức PM</th><th>Điểm mặc định</th><th>Quality Factor</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="badge b-green">Xuất sắc (excellent)</span></td><td>100 điểm</td><td>1.15</td></tr>
+          <tr><td><span class="badge b-blue">Đạt chuẩn (good)</span></td><td>88 điểm</td><td>1.00</td></tr>
+          <tr><td><span class="badge b-amber">Cần sửa lại (rework)</span></td><td>65 điểm</td><td>0.75</td></tr>
+          <tr><td><span class="badge b-rose">Chưa đạt CL (poor)</span></td><td>45 điểm</td><td>0.45</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h3 class="sub-heading">5.3. Thuật toán AI Gợi ý Chấm điểm &amp; Phát hiện Bất thường (<code>kpiService.js</code> &amp; <code>aiService.js</code>)</h3>
+  <div class="card-grid-2">
+    <div class="card">
+      <div class="card-title">Thuật toán AI Gợi ý Điểm (<code>aiSuggestedScore</code>)</div>
+      <p class="small-note">Khởi tạo điểm gốc <strong>95 điểm</strong> cho task không hủy, sau đó cộng/trừ minh bạch:</p>
+      <ul class="small-note" style="margin-bottom:0;">
+        <li>Chưa tích <em>Xong</em>: <strong>-22 điểm</strong></li>
+        <li>Trễ deadline <code>daysLate</code> ngày: <strong>-min(25, daysLate &times; 6) điểm</strong></li>
+        <li>Chưa có file/link minh chứng: <strong>-10 điểm</strong></li>
+        <li>Có số lần Rework &gt; 0: <strong>-min(20, reworkCount &times; 8) điểm</strong></li>
+        <li>Thưởng hoàn thành xuất sắc (Đã Xong + Đúng hạn + Có minh chứng + 0 Rework + Self &ge; 95): <strong>+5 điểm</strong></li>
+        <li>Giới hạn khung điểm: <code>[30, 105]</code>. Quy đổi mức: &ge;95 <code>excellent</code>, &ge;78 <code>good</code>, &ge;58 <code>rework</code>, &lt;58 <code>poor</code>.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">4 Cảnh báo Bất thường &amp; Phân loại Nguyên nhân</div>
+      <p class="small-note"><strong>Phát hiện bất thường (<code>anomalies</code>)</strong>:</p>
+      <ul class="small-note">
+        <li>Đã tích Xong nhưng chưa đính kèm file hoặc link minh chứng.</li>
+        <li>Tự chấm điểm cao hơn PM/Lãnh đạo từ <strong>20 điểm trở lên</strong>.</li>
+        <li>Trễ hạn nhưng chưa có giải trình cá nhân (<code>selfNote</code> trống).</li>
+        <li>Task bị yêu cầu sửa lại (Rework) từ <strong>2 lần trở lên</strong>.</li>
+      </ul>
+      <p class="small-note" style="margin-bottom:0;"><strong>NLP Phân loại trễ hạn &amp; Khuyến nghị</strong>: Phân tích từ khóa giải trình thành <em>Khách quan</em> (đối tác/khách hàng/dời lịch) hoặc <em>Chủ quan</em> (ước lượng/chưa tối ưu/lỗi); phân tích feedback PM để sinh hành động khắc phục theo từng nhóm lỗi (UI mobile, query/index, test case ngoại lệ, link minh chứng).</p>
+    </div>
+  </div>
+
+  <!-- ==================== PHẦN VI: API, DỮ LIỆU MẪU & TRIỂN KHAI ==================== -->
+  <div class="page-break"></div>
+
+  <div class="section-header">
+    <h2>PHẦN VI. DANH MỤC REST API, DỮ LIỆU MẪU &amp; HƯỚNG DẪN VẬN HÀNH</h2>
+    <span class="section-tag">API &amp; Deployment</span>
+  </div>
+
+  <h3 class="sub-heading">6.1. Tổng hợp Hệ thống REST API Endpoints (<code>backend/src/routes/api.js</code>)</h3>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th style="width: 14%;">Nhóm API</th>
+        <th style="width: 34%;">Phương thức &amp; Đường dẫn</th>
+        <th style="width: 52%;">Chức năng &amp; Kiểm soát Quyền</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Public / Auth</strong></td>
+        <td><code>GET /api/health</code><br/><code>GET /api/auth/demo-accounts</code><br/><code>POST /api/auth/login</code><br/><code>POST /api/admin/reset-seed</code></td>
+        <td>Kiểm tra trạng thái server &amp; CSDL; lấy danh sách tài khoản mẫu; đăng nhập cấp Bearer JWT; khôi phục dữ liệu mẫu gốc từ <code>seedData.js</code>.</td>
+      </tr>
+      <tr>
+        <td><strong>Tầng 1<br/>System Admin</strong></td>
+        <td><code>GET /api/system/overview</code><br/><code>POST/PATCH/DELETE /api/system/companies</code><br/><code>POST/PATCH/DELETE /api/system/company-admins</code></td>
+        <td>Yêu cầu <code>SYSTEM_ADMIN</code>. Thống kê toàn nền tảng; quản lý CRUD các công ty và tài khoản <code>COMPANY_ADMIN</code>.</td>
+      </tr>
+      <tr>
+        <td><strong>Tầng 2<br/>Company Admin</strong></td>
+        <td><code>GET /api/company-admin/users</code><br/><code>POST /api/users</code><br/><code>PATCH/DELETE /api/users/:id</code></td>
+        <td>Yêu cầu <code>COMPANY_ADMIN</code>. Chỉ quản lý tài khoản nhân sự (<code>DIRECTOR</code>, <code>MEMBER</code>) trong công ty mình; không thao tác lên dự án/task.</td>
+      </tr>
+      <tr>
+        <td><strong>Tầng 3<br/>Workspace &amp; Upload</strong></td>
+        <td><code>GET /api/auth/me</code><br/><code>GET /api/bootstrap</code><br/><code>POST /api/upload</code></td>
+        <td>Trả về thông tin user &amp; ma trận quyền; nạp toàn bộ dữ liệu scoped theo công ty, tuần và dự án; tải tệp minh chứng Base64 (&le; 8MB) vào <code>/uploads</code>.</td>
+      </tr>
+      <tr>
+        <td><strong>Dự án &amp; Task</strong></td>
+        <td><code>POST/DELETE /api/projects</code><br/><code>PATCH /api/projects/:id/members</code><br/><code>GET/POST/PATCH/DELETE /api/tasks</code><br/><code>POST /api/tasks/bulk</code></td>
+        <td>Tạo/xóa dự án (chỉ <code>DIRECTOR</code>); phân vai trò <code>PM/DEV/BA/TEST</code> (<code>DIRECTOR</code> hoặc <code>PM</code> dự án); quản lý task kèm kiểm tra trần <code>5.0 Est/tuần</code> và quyền chấm PM.</td>
+      </tr>
+      <tr>
+        <td><strong>KPI &amp; AI Engine</strong></td>
+        <td><code>GET /api/kpi/summary</code><br/><code>GET /api/ai/watchdog</code><br/><code>GET /api/ai/employee-360</code><br/><code>POST /api/ai/parse-tasks</code><br/><code>POST /api/ai/chat</code></td>
+        <td>Tổng hợp KPI; báo cáo AI Watchdog &amp; Hồ sơ 360° (chặn <code>403</code> nhân viên thường); bóc tách text tiếng Việt thành task; truy vấn AI Copilot.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3 class="sub-heading">6.2. Hệ thống Dữ liệu Mẫu Kiểm thử (<code>backend/src/db/seedData.js</code>)</h3>
+  <p>Hệ thống khởi tạo sẵn dữ liệu 3 tuần làm việc (<code>2026-W45</code>, <code>2026-W46</code>, tuần hiện tại <code>2026-W47</code> với mốc tham chiếu <code>2026-11-22</code>) trên <strong>2 Công ty độc lập</strong> và <strong>6 Dự án</strong> (mật khẩu mặc định các tài khoản demo: <code>123456</code>):</p>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th style="width: 22%;">Công ty / Phạm vi</th>
+        <th style="width: 26%;">Tài khoản Demo (Email)</th>
+        <th style="width: 24%;">Vai trò Hệ thống / Dự án</th>
+        <th style="width: 28%;">Mục đích Kiểm thử</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Toàn Hệ thống</strong></td>
+        <td><code>sysadmin@wpmes.vn</code></td>
+        <td><span class="badge b-slate">SYSTEM_ADMIN</span></td>
+        <td>Tạo công ty mới, cấp Admin công ty.</td>
+      </tr>
+      <tr>
+        <td rowspan="5"><strong>Trí Nam Group</strong><br/><code>CMP-TRINAM</code><br/><span class="small-note">4 Dự án: WPMES Core, TN-EduLMS, TN-SmartGov, TN-Enterprise ERP</span></td>
+        <td><code>admin@trinam.vn</code></td>
+        <td><span class="badge b-purple">COMPANY_ADMIN</span></td>
+        <td>Quản lý nhân sự Trí Nam (ẩn Task/Dự án).</td>
+      </tr>
+      <tr>
+        <td><code>hung.nv@trinam.vn</code></td>
+        <td><span class="badge b-blue">DIRECTOR</span> (Nguyễn Văn Hưng)</td>
+        <td>Toàn quyền tạo dự án, chỉ định PM, AI &amp; KPI.</td>
+      </tr>
+      <tr>
+        <td><code>hung.do@trinam.vn</code></td>
+        <td><span class="badge b-green">MEMBER</span> • <strong>PM</strong> 4 dự án</td>
+        <td>Chấm Quality Gate, xem Watchdog &amp; Copilot.</td>
+      </tr>
+      <tr>
+        <td><code>thang.phan@trinam.vn</code></td>
+        <td><span class="badge b-green">MEMBER</span> • <strong>DEV</strong> (WPMES, LMS)</td>
+        <td>Log task (đang 5.0/5.0 Est), nộp minh chứng.</td>
+      </tr>
+      <tr>
+        <td><code>ha.tran</code>, <code>quan.nguyen</code>, <code>nam.le</code>, <code>bao.pham</code> <code>@trinam.vn</code></td>
+        <td><span class="badge b-green">MEMBER</span> • BA / DEV / TEST</td>
+        <td>Kiểm thử các case trễ hạn, rework, lệch điểm.</td>
+      </tr>
+      <tr>
+        <td><strong>VietCloud Digital Corp</strong><br/><code>CMP-VIETCLOUD</code><br/><span class="small-note">2 Dự án: VC-Fintech Core, VC-OmniCRM AI</span></td>
+        <td><code>admin@vietcloud.io</code><br/><code>duc.le@vietcloud.io</code><br/><code>yen.hoang@vietcloud.io</code><br/><code>khanh.vu / vy.dang@vietcloud.io</code></td>
+        <td>COMPANY_ADMIN<br/>DIRECTOR<br/>MEMBER (PM)<br/>MEMBER (DEV/BA/TEST)</td>
+        <td>Kiểm chứng cô lập dữ liệu Multi-Tenant độc lập hoàn toàn với Trí Nam Group.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3 class="sub-heading">6.3. Hướng dẫn Cài đặt, Chạy Hệ thống &amp; Định hướng Phát triển</h3>
+  <div class="card-grid-2">
+    <div class="card">
+      <div class="card-title">Cài đặt &amp; Khởi chạy Cục bộ (Node.js &ge; 18.x)</div>
+      <div class="formula-box" style="margin:4px 0; font-size:8.4pt;">
+        <span class="cm"># Terminal 1 — Backend API (Cổng 5000)</span><br/>
+        cd backend &amp;&amp; npm install &amp;&amp; npm run dev<br/><br/>
+        <span class="cm"># Terminal 2 — Frontend React (Cổng 5173)</span><br/>
+        cd frontend &amp;&amp; npm install &amp;&amp; npm run dev
+      </div>
+      <p class="small-note" style="margin-bottom:0;">
+        Kiểm tra sức khỏe API tại <code>http://localhost:5000/api/health</code>. Hỗ trợ biến môi trường <code>MONGODB_URI</code>, <code>JWT_SECRET</code> và <code>GEMINI_API_KEY</code> trong <code>backend/.env</code>.
+      </p>
+    </div>
+    <div class="card">
+      <div class="card-title">Định hướng Mở rộng Tương lai</div>
+      <ul class="small-note" style="margin-bottom:0;">
+        <li><strong>Đồng bộ Lark Base / Webhook</strong>: Kết nối hai chiều qua Lark Open API để gửi thông báo nhắc deadline và duyệt Rework trên Lark Messenger.</li>
+        <li><strong>Mã hóa mật khẩu Bcrypt &amp; Refresh Token</strong>: Nâng cấp bảo mật lưu trữ mật khẩu người dùng và quản lý phiên nâng cao khi đưa ra môi trường Production.</li>
+        <li><strong>Xuất báo cáo Excel / PDF tự động</strong>: Xuất bảng lương KPI tháng và báo cáo hiệu suất dự án định kỳ ngay từ giao diện AI Dashboard.</li>
+      </ul>
+    </div>
+  </div>
+
+</body>
+</html>

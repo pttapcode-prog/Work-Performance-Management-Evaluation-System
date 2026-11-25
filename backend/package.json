@@ -1,0 +1,17 @@
+{
+  "name": "wpmes-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "WPMES - Work Performance Management and Evaluation System Backend REST API (Node.js + Express + MongoDB Mongoose)",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mongoose": "^8.8.1"
+  }
+}
